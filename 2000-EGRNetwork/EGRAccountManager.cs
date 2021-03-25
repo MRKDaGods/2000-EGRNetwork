@@ -24,7 +24,7 @@ namespace MRK {
         }
 
         public bool RegisterAccount(string name, string email, string phash, string hwid) {
-            EGRAccount acc = new EGRAccount(name, email, phash, hwid);
+            EGRAccount acc = new EGRAccount(name, email, phash, -1, hwid);
             if (AccountExists(acc))
                 return false;
 
@@ -38,7 +38,7 @@ namespace MRK {
         public bool LoginAccount(string email, string phash, EGRSessionUser user, out EGRAccount acc) {
             acc = null;
 
-            EGRAccount tmp = new EGRAccount("x y", email, phash, "");
+            EGRAccount tmp = new EGRAccount("x y", email, phash, -1, "");
             if (!AccountExists(tmp))
                 return false;
 
@@ -74,7 +74,7 @@ namespace MRK {
         public bool LoginAccount(EGRSessionUser user, out EGRAccount acc) {
             acc = null;
 
-            EGRAccount tmp = new EGRAccount("E G R", $"{user.HWID}@egr.com", EGRAccount.CalculateHash(user.HWID), "");
+            EGRAccount tmp = new EGRAccount("E G R", $"{user.HWID}@egr.com", EGRAccount.CalculateHash(user.HWID), -1, "");
             if (!AccountExists(tmp)) {
                 //create account
                 if (!RegisterAccount(tmp.FullName, tmp.Email, tmp.Password, user.HWID))
@@ -97,11 +97,25 @@ namespace MRK {
                 string name = reader.ReadString();
                 string email = reader.ReadString();
                 string pwd = reader.ReadString();
+                sbyte gender = reader.ReadSByte();
                 string hwid = reader.ReadString();
                 reader.Close();
 
-                return new EGRAccount(name, email, pwd, hwid);
+                return new EGRAccount(name, email, pwd, gender, hwid);
             }
+        }
+
+        public bool UpdateAccountInfo(string token, string name, string email, sbyte gender, EGRSessionUser sessionUser) {
+            //so sessionUser.Account should be our acc, lets compare tokens?
+            if (sessionUser.Token.Token != token)
+                return false;
+
+            //Validate?
+
+            EGRAccount acc = new EGRAccount(name, email, sessionUser.Account.Password, gender, sessionUser.HWID);
+            WriteAccountInfo(acc);
+            sessionUser.AssignAccount(acc);
+            return true;
         }
 
         public EGRToken GetToken(string hwid, string token) {
@@ -177,6 +191,7 @@ namespace MRK {
                 writer.Write(acc.FullName);
                 writer.Write(acc.Email);
                 writer.Write(acc.Password);
+                writer.Write(acc.Gender);
                 writer.Write(acc.HWID);
                 writer.Write(acc.UUID);
 

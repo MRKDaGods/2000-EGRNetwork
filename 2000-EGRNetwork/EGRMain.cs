@@ -9,8 +9,8 @@ using static System.Console;
 
 namespace MRK.Networking {
     public class EGRMain {
-        const int CZ_MAIN_NETWORK_PORT = 23466;
-        const string CZ_MAIN_NETWORK_KEY = "ntxsdI8cp4JEVcosVwz1";
+        const int EGR_MAIN_NETWORK_PORT = 23466;
+        const string EGR_MAIN_NETWORK_KEY = "ntxsdI8cp4JEVcosVwz1";
 
         static EGRMain ms_Instance;
 
@@ -26,14 +26,14 @@ namespace MRK.Networking {
         void _main() {
             WriteLine("EGR Main Network v1");
             WriteLine("Starting...");
-            m_Network = new EGRNetwork(CZ_MAIN_NETWORK_PORT, CZ_MAIN_NETWORK_KEY);
+            m_Network = new EGRNetwork(EGR_MAIN_NETWORK_PORT, EGR_MAIN_NETWORK_KEY);
             if (!m_Network.Start()) {
                 WriteLine("Failed to start..");
                 Exit();
                 return;
             }
 
-            WriteLine($"Started EGR Main Network, port={CZ_MAIN_NETWORK_PORT}, key={CZ_MAIN_NETWORK_KEY}");
+            WriteLine($"Started EGR Main Network, port={EGR_MAIN_NETWORK_PORT}, key={EGR_MAIN_NETWORK_KEY}");
 
             while (true) {
                 m_Network.UpdateNetwork();

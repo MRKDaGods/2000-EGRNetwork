@@ -21,10 +21,11 @@ namespace MRK {
         public string FullName => $"{FirstName} {LastName}";
         public string Email { get; private set; }
         public string Password { get; private set; }
+        public sbyte Gender { get; private set; }
         public string HWID { get; private set; }
         public string UUID { get; private set; }
 
-        public EGRAccount(string name, string email, string phash, string hwid) {
+        public EGRAccount(string name, string email, string phash, sbyte gender, string hwid) {
             string[] _names = name.Split(' ');
             FirstName = _names[0];
 
@@ -34,6 +35,7 @@ namespace MRK {
 
             Email = email;
             Password = phash;
+            Gender = gender;
             HWID = hwid;
 
             AssignUUID();

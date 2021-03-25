@@ -86,6 +86,7 @@
     <Compile Include="PacketHandleLogoutAccount.cs" />
     <Compile Include="PacketHandlerAttribute.cs" />
     <Compile Include="PacketHandleRegisterAccount.cs" />
+    <Compile Include="PacketHandleUpdateAccountInfo.cs" />
     <Compile Include="PacketInSessionKey.cs" />
     <Compile Include="PacketLayerBase.cs" />
     <Compile Include="PacketOutSessionKey.cs" />

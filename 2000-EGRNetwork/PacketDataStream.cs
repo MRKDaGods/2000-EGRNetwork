@@ -80,6 +80,10 @@ namespace MRK.Networking.Packets {
             return Encoding.UTF8.GetString(ReadBytes(bytesCount));
         }
 
+        public sbyte ReadSByte() {
+            return m_Reader.ReadSByte();
+        }
+
         public void WriteByte(byte b) {
             m_Writer.Write(b);
         }
@@ -128,6 +132,10 @@ namespace MRK.Networking.Packets {
 
             //put string
             WriteBytes(Encoding.UTF8.GetBytes(s));
+        }
+
+        public void WriteSByte(sbyte sb) {
+            m_Writer.Write(sb);
         }
 
         public void WriteBool(bool b) {
