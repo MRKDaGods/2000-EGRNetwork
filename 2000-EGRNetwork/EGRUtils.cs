@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace MRK.Networking {
     public class EGRUtils {
@@ -12,6 +13,14 @@ namespace MRK.Networking {
                 str += ms_Charset[random.Next(0, ms_Charset.Length)];
 
             return str;
+        }
+
+        public static string FixInvalidString(string str) {
+            return string.Join("_", str.Split(Path.GetInvalidFileNameChars()));
+        }
+
+        public static ulong GetRandomID() {
+            return new Random().NextULong();
         }
     }
 }

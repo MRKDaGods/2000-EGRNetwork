@@ -32,6 +32,9 @@ namespace MRK.Networking.Packets {
         //standard response
         STDRSP = 0x20,
 
+        //fetch places
+        PLCFETCH = 0x30,
+
 
         MAX
     }

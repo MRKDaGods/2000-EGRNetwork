@@ -46,10 +46,15 @@
     <Compile Include="BaseChannel.cs" />
     <Compile Include="EGRAccount.cs" />
     <Compile Include="EGRAccountManager.cs" />
+    <Compile Include="EGRCommandManager.cs" />
+    <Compile Include="EGRExtensions.cs" />
+    <Compile Include="EGRFileSysIO.cs" />
     <Compile Include="EGRLogger.cs" />
     <Compile Include="EGRMain.cs" />
     <Compile Include="EGRNetwork.cs" />
     <Compile Include="EGRNetworkOLD.cs" />
+    <Compile Include="EGRPlace.cs" />
+    <Compile Include="EGRPlaceManager.cs" />
     <Compile Include="EGRSessionUser.cs" />
     <Compile Include="EGRUserInfo.cs" />
     <Compile Include="EGRUtils.cs" />
@@ -80,6 +85,7 @@
     <Compile Include="Packet.cs" />
     <Compile Include="PacketDataStream.cs" />
     <Compile Include="PacketHandleDeviceInfo.cs" />
+    <Compile Include="PacketHandleFetchPlaces.cs" />
     <Compile Include="PacketHandleLoginAccount.cs" />
     <Compile Include="PacketHandleLoginAccountDev.cs" />
     <Compile Include="PacketHandleLoginAccountToken.cs" />

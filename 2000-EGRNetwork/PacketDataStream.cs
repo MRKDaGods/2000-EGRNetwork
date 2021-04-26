@@ -84,6 +84,10 @@ namespace MRK.Networking.Packets {
             return m_Reader.ReadSByte();
         }
 
+        public double ReadDouble() {
+            return m_Reader.ReadDouble();
+        }
+
         public void WriteByte(byte b) {
             m_Writer.Write(b);
         }
@@ -140,6 +144,10 @@ namespace MRK.Networking.Packets {
 
         public void WriteBool(bool b) {
             m_Writer.Write(b);
+        }
+
+        public void WriteDouble(double d) {
+            m_Writer.Write(d);
         }
 
         public void Clean() {

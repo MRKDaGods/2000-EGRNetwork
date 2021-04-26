@@ -36,6 +36,10 @@ namespace MRK.Networking {
             WriteLine($"Started EGR Main Network, port={EGR_MAIN_NETWORK_PORT}, key={EGR_MAIN_NETWORK_KEY}");
 
             while (true) {
+                if (KeyAvailable) {
+                    EGRCommandManager.Execute(ReadLine());
+                }
+
                 m_Network.UpdateNetwork();
                 Thread.Sleep(100);
             }

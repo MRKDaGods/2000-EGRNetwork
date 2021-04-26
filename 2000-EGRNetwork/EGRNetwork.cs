@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 
 using static MRK.EGRLogger;
 using static System.Console;
@@ -28,6 +29,7 @@ namespace MRK.Networking {
 
         public static EGRNetwork Instance { get; private set; }
         public EGRAccountManager AccountManager { get; private set; }
+        public EGRPlaceManager PlaceManager { get; private set; }
 
         public EGRNetwork(int port, string key) {
             Instance = this;
@@ -61,6 +63,9 @@ namespace MRK.Networking {
             }
 
             (AccountManager = new EGRAccountManager()).Initialize(@"E:\EGRNetworkAlpha");
+            (PlaceManager = new EGRPlaceManager()).Initialize(@"E:\mrkwinrt\vsprojects\MRKGoogleSkimmer\MRKGoogleSkimmer\bin\Debug\Data", @"E:\EGRNetworkAlpha");
+
+            var x = PlaceManager.GetPlaces(30.02d, 30d, 31d, 31d, 0);
         }
 
         void OnConnectionRequest(ConnectionRequest request) {
@@ -105,23 +110,25 @@ namespace MRK.Networking {
         }
 
         void OnReceive(NetPeer peer, NetPacketReader reader, DeliveryMethod method) {
-            try {
-                PacketNature nature = PacketNature.Out;//(PacketNature)reader.GetByte();
-                PacketType type = (PacketType)reader.GetUShort();
+            new Thread(() => {
+                try {
+                    PacketNature nature = PacketNature.Out;//(PacketNature)reader.GetByte();
+                    PacketType type = (PacketType)reader.GetUShort();
 
-                int bufferedReq = reader.GetInt();
+                    int bufferedReq = reader.GetInt();
 
-                PacketDataStream dataStream = new PacketDataStream(reader.GetRemainingBytes(), nature);
-                dataStream.Prepare();
+                    PacketDataStream dataStream = new PacketDataStream(reader.GetRemainingBytes(), nature);
+                    dataStream.Prepare();
 
-                m_OnPacketReceived?.Invoke(peer, type, dataStream, bufferedReq);
+                    m_OnPacketReceived?.Invoke(peer, type, dataStream, bufferedReq);
 
-                WriteLine($"[{peer.Id}] packet, n={nature}, t={type}, SZ={dataStream.Data.Length} bytes");
+                    WriteLine($"[{peer.Id}] packet, n={nature}, t={type}, SZ={dataStream.Data.Length} bytes");
 
-                dataStream.Clean();
-            }
-            catch {
-            }
+                    dataStream.Clean();
+                }
+                catch {
+                }
+            }).Start();
         }
 
         public bool Start() {
