@@ -15,30 +15,28 @@ namespace MRK.Networking.Packets {
                 return;
             }
 
-            double minLat = stream.ReadDouble();
-            double minLng = stream.ReadDouble();
-            double maxLat = stream.ReadDouble();
-            double maxLng = stream.ReadDouble();
-            int zoomLvl = stream.ReadInt32();
+            ulong cid = stream.ReadUInt64();
 
-            List<EGRPlace> places = network.PlaceManager.GetPlaces(minLat, minLng, maxLat, maxLng, zoomLvl);
-            LogInfo($"[{sessionUser.Peer.Id}] fetchplcs, min({minLat}, {minLng}), max({maxLat}, {maxLng}), z={zoomLvl}, found {places.Count} places");
+            EGRPlace place = network.PlaceManager.GetPlace(cid);
+            LogInfo($"[{sessionUser.Peer.Id}] fetchplc, {cid}");
 
             network.SendPacket(sessionUser.Peer, buffer, PacketType.PLCFETCH, DeliveryMethod.ReliableOrdered, (x) => {
-                x.WriteInt32(places.Count);
+                x.WriteString(place.Name);
+                x.WriteString(place.Type);
+                x.WriteUInt64(place.CIDNum);
+                x.WriteString(place.Address);
+                x.WriteDouble(place.Latitude);
+                x.WriteDouble(place.Longitude);
 
-                foreach (EGRPlace place in places) {
-                    x.WriteString(place.Name);
-                    x.WriteString(place.Type);
-                    x.WriteString(place.CID);
-                    x.WriteString(place.Address);
-                    x.WriteDouble(place.Latitude);
-                    x.WriteDouble(place.Longitude);
+                x.WriteInt32(place.Ex.Length);
+                foreach (string ex in place.Ex)
+                    x.WriteString(ex);
 
-                    x.WriteInt32(place.Ex.Length);
-                    foreach (string ex in place.Ex)
-                        x.WriteString(ex);
-                }
+                x.WriteUInt64(place.Chain);
+
+                x.WriteInt32(place.Types.Length);
+                foreach (EGRPlaceType type in place.Types)
+                    x.WriteUInt16((ushort)type);
             });
         }
     }

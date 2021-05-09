@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -40,6 +41,10 @@ namespace MRK {
             } while (r > limit);
 
             return r % range + min;
+        }
+
+        public static bool EOF(this BinaryReader binaryReader) {
+            return binaryReader.BaseStream.Position == binaryReader.BaseStream.Length;
         }
     }
 }

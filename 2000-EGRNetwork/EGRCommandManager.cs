@@ -66,12 +66,54 @@ namespace MRK {
 
         static void __cmd_genchaintemp(string[] args, EGRNetwork network) {
             string name = TryGetElement(args, 0);
-            if (IsStringInvalid(prop)) {
+            if (IsStringInvalid(name)) {
                 WriteLine("Invalid name");
                 return;
             }
 
             network.PlaceManager.GeneratePlaceChainTemplate(name);
+        }
+
+        static void __cmd_genchain(string[] args, EGRNetwork network) {
+            string name = TryGetElement(args, 0);
+            if (IsStringInvalid(name)) {
+                WriteLine("Invalid name");
+                return;
+            }
+
+            network.PlaceManager.GeneratePlaceChainFromTemplate(name);
+        }
+
+        static void __cmd_assignchainplaces(string[] args, EGRNetwork network) {
+            string chainName = TryGetElement(args, 0);
+            if (IsStringInvalid(chainName)) {
+                WriteLine("Invalid chain name");
+                return;
+            }
+
+            EGRPlaceChain chain = network.PlaceManager.GetChain(chainName);
+            if (chain == null) {
+                WriteLine("Invalid chain");
+                return;
+            }
+
+            network.PlaceManager.AssignPlacesToChain(chain);
+        }
+
+        static void __cmd_addtiles(string[] args, EGRNetwork network) {
+            string tileset = TryGetElement(args, 0);
+            if (IsStringInvalid(tileset)) {
+                WriteLine("Invalid tileset");
+                return;
+            }
+
+            string path = TryGetElement(args, 1);
+            if (IsStringInvalid(path)) {
+                WriteLine("Invalid path");
+                return;
+            }
+
+            network.TileManager.AddTilesFromFile(path, tileset);
         }
     }
 }

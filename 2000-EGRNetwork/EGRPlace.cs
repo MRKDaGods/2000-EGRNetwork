@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace MRK {
-    public enum EGRPlaceType {
+    public enum EGRPlaceType : ushort {
         None = 0,
         Restaurant,
         Delivery,
@@ -43,32 +43,38 @@ namespace MRK {
         public string Name { get; private set; }
         public string Type { get; private set; }
         public string CID { get; private set; }
+        public ulong CIDNum { get; private set; }
         public string Address { get; private set; }
         public double Latitude { get; private set; }
         public double Longitude { get; private set; }
         public string[] Ex { get; private set; }
         public EGRPlaceType[] Types { get; private set; }
+        public ulong Chain { get; set; } //is place related to a chain?
 
-        public EGRPlace(string name, string type, string cid, string addr, string lat, string lng, string[] ex) {
+        public EGRPlace(string name, string type, string cid, string addr, string lat, string lng, string[] ex, ulong chain = 0) {
             Name = name;
             Type = type;
             CID = cid;
+            CIDNum = ulong.Parse(CID);
             Address = addr;
             Latitude = double.Parse(lat);
             Longitude = double.Parse(lng);
             Ex = ex ?? new string[0];
             Types = new EGRPlaceType[1] { EGRPlaceType.None };
+            Chain = chain;
         }
 
-        public EGRPlace(string name, string type, string cid, string addr, double lat, double lng, string[] ex) {
+        public EGRPlace(string name, string type, string cid, string addr, double lat, double lng, string[] ex, ulong chain = 0) {
             Name = name;
             Type = type;
             CID = cid;
+            CIDNum = ulong.Parse(CID);
             Address = addr;
             Latitude = lat;
             Longitude = lng;
             Ex = ex ?? new string[0];
             Types = new EGRPlaceType[1] { EGRPlaceType.None };
+            Chain = chain;
         }
 
         public void SetTypes(EGRPlaceType[] types) {

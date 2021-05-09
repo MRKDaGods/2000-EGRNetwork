@@ -14,7 +14,8 @@ namespace MRK {
 
         readonly string[] m_VisualFormatPrefix;
         string m_RootPath;
-        ReaderWriterLock m_RWLock;
+        EGRFileSysIOPlace m_IOPlace;
+        EGRFileSysIOPlaceChain m_IOChain;
 
         string m_PlacesPath => $"{m_RootPath}\\Places";
         string m_IndexPath => $"{m_RootPath}\\PlacesIndex";
@@ -37,18 +38,15 @@ namespace MRK {
                 "ID:",
                 "MATCH:"
             };
-
-            m_RWLock = new ReaderWriterLock();
         }
 
         public void Initialize(string path, string root) {
+            m_RootPath = root;
             if (!Directory.Exists(root))
                 Directory.CreateDirectory(root);
 
-            m_RootPath = root;
-
-            if (!Directory.Exists(m_PlacesPath))
-                Directory.CreateDirectory(m_PlacesPath);
+            m_IOPlace = new EGRFileSysIOPlace(m_PlacesPath);
+            m_IOChain = new EGRFileSysIOPlaceChain(m_PlacesChainsPath);
 
             if (!Directory.Exists(m_IndexPath)) {
                 Directory.CreateDirectory(m_IndexPath);
@@ -58,10 +56,6 @@ namespace MRK {
             if (!Directory.Exists(m_TypeIndexPath)) {
                 Directory.CreateDirectory(m_TypeIndexPath);
                 CreateTypeIndexFolders();
-            }
-
-            if (!Directory.Exists(m_PlacesChainsPath)) {
-                Directory.CreateDirectory(m_PlacesChainsPath);
             }
 
             if (!Directory.Exists(m_PlacesChainsTemplatePath)) {
@@ -134,9 +128,10 @@ namespace MRK {
                     continue;
 
                 EGRPlace place = new EGRPlace(name, type, cid, addr, lat, lng, ex.ToArray());
-                Directory.CreateDirectory(GetPlacePath(place));
-                WritePlaceInfo(place);
+                GeneratePlaceTypes(place); //this writes to fs
+                //m_IOPlace.Write(place);
                 WritePlaceIndex(place);
+
                 LogInfo($"Added place -> [{place.CID}] {place.Name} - {place.Type}");
             }
         }
@@ -163,68 +158,8 @@ namespace MRK {
             LogInfo($"Created {lats} lats and {lngs} lngs");
         }
 
-        string GetPlacePath(string cid) {
-            return $"{m_PlacesPath}\\{cid}";
-        }
-
-        string GetPlacePath(EGRPlace place) {
-            return $"{m_PlacesPath}\\{place.CID}";
-        }
-
         bool PlaceExists(string cid) {
-            return Directory.Exists(GetPlacePath(cid));
-        }
-
-        void WritePlaceInfo(EGRPlace place) {
-            try {
-                m_RWLock.AcquireWriterLock(10000);
-
-                using (FileStream fstream = new FileStream($"{GetPlacePath(place)}\\egr0", FileMode.Create))
-                using (BinaryWriter writer = new BinaryWriter(fstream)) {
-                    writer.Write(place.Name);
-                    writer.Write(place.Type);
-                    writer.Write(place.CID);
-                    writer.Write(place.Address);
-                    writer.Write(place.Latitude);
-                    writer.Write(place.Longitude);
-
-                    writer.Write(place.Ex.Length);
-                    foreach (string ex in place.Ex)
-                        writer.Write(ex);
-
-                    writer.Close();
-                }
-            }
-            finally {
-                m_RWLock.ReleaseWriterLock();
-            }
-        }
-
-        EGRPlace ReadPlaceInfo(string cid) {
-            try {
-                m_RWLock.AcquireReaderLock(10000);
-
-                using (FileStream fstream = new FileStream($"{GetPlacePath(cid)}\\egr0", FileMode.Open))
-                using (BinaryReader reader = new BinaryReader(fstream)) {
-                    string name = reader.ReadString();
-                    string type = reader.ReadString();
-                    string _cid = reader.ReadString();
-                    string addr = reader.ReadString();
-                    double lat = reader.ReadDouble();
-                    double lng = reader.ReadDouble();
-
-                    int exLen = reader.ReadInt32();
-                    List<string> ex = new List<string>();
-                    for (int i = 0; i < exLen; i++)
-                        ex.Add(reader.ReadString());
-
-                    reader.Close();
-                    return new EGRPlace(name, type, _cid, addr, lat, lng, ex.ToArray());
-                }
-            }
-            finally {
-                m_RWLock.ReleaseReaderLock();
-            }
+            return m_IOPlace.DirExists(cid);
         }
 
         double RoundIndex(double number) {
@@ -300,7 +235,7 @@ namespace MRK {
                 foreach (string cid in cids) {
                     if (qualifying.Contains(cid)) {
                         //PLACE found
-                        ret.Add(ReadPlaceInfo(cid));
+                        ret.Add(m_IOPlace.Read(cid));
                     }
                 }
             }
@@ -308,10 +243,14 @@ namespace MRK {
             return ret;
         }
 
+        public EGRPlace GetPlace(ulong cid) {
+            return m_IOPlace.Read(cid.ToString());
+        }
+
         public List<EGRPlace> GetAllPlaces() {
             List<EGRPlace> ret = new List<EGRPlace>();
             foreach (string filename in Directory.EnumerateDirectories(m_PlacesPath)) {
-                ret.Add(ReadPlaceInfo(Path.GetFileName(filename)));
+                ret.Add(m_IOPlace.Read(Path.GetFileName(filename)));
             }
 
             return ret;
@@ -324,11 +263,24 @@ namespace MRK {
             }
         }
 
+        public void DeletePlaceTypeIndex(EGRPlace place) {
+            foreach (EGRPlaceType type in place.Types) {
+                string dir = $"{m_TypeIndexPath}\\{type}\\{place.CID}";
+                if (File.Exists(dir))
+                    File.Delete(dir);
+            }
+        }
+
         public void GeneratePlaceTypes(EGRPlace place) {
             LogInfo($"Matching {place.CID} - {place.Name}");
             EGRPlaceType[] matches = EGRPlaceTypeMatcher.Match(place);
             LogInfo($"Found {matches.Length} matches [{string.Join(", ", matches)}]");
-            //TODO assign
+
+            DeletePlaceTypeIndex(place);
+            place.SetTypes(matches);
+            WritePlaceTypeIndex(place);
+
+            m_IOPlace.Write(place);
         }
 
         public void WritePlaceTypeIndex(EGRPlace place) {
@@ -341,8 +293,6 @@ namespace MRK {
             File.WriteAllText($"{m_PlacesChainsTemplatePath}\\{EGRUtils.FixInvalidString(name)}.txt", $"CNAME: {name}\r\nID: {EGRUtils.GetRandomID()}\r\nMATCH: {name.ToLower()}");
             LogInfo($"Generated place chain template '{name}'");
         }
-
-        public void WritePlaceChain()
 
         public void GeneratePlaceChainFromTemplate(string tempName) {
             //get template?
@@ -392,6 +342,72 @@ namespace MRK {
             }
 
             EGRPlaceChain chain = new EGRPlaceChain(ulong.Parse(id), name, matches.ToArray());
+            m_IOChain.Write(chain);
+            m_IOChain.IndexChain(chain);
+
+            LogInfo($"Generated chain from {tempName}");
+        }
+
+        public void AssignPlacesToChain(EGRPlaceChain chain) {
+            if (chain == null)
+                return;
+
+            List<Tuple<int, string>> wordBuffer = new List<Tuple<int, string>>();
+            string buf = "";
+
+            List<EGRPlace> places = GetAllPlaces();
+            foreach (EGRPlace place in places) {
+                //already has a chain?
+                if (place.Chain > 0)
+                    continue;
+
+                int idx = 0;
+                while (idx < place.Name.Length) {
+                    char c = place.Name[idx++];
+                    if (c == ' ') {
+                        if (buf.Length > 0) {
+                            wordBuffer.Add(new Tuple<int, string>(idx - buf.Length - 1, buf));
+                            buf = "";
+                        }
+
+                        continue;
+                    }
+
+                    buf += c;
+                }
+
+                if (buf.Length > 0) {
+                    wordBuffer.Add(new Tuple<int, string>(idx - buf.Length, buf));
+                }
+
+                foreach (string match in chain.Matches) {
+                    bool _break = false;
+
+                    foreach (Tuple<int, string> word in wordBuffer) {
+                        if (place.Name.Substring(word.Item1).ToLower().StartsWith(match)) {
+                            //match must end with a space or eos
+                            int matchEnding = word.Item1 + match.Length;
+                            if (matchEnding == place.Name.Length || place.Name[matchEnding] == ' ') {
+                                place.Chain = chain.ID;
+                                m_IOPlace.Write(place);
+                                _break = true;
+
+                                LogInfo($"Assigned {place.Name} to chain {chain.Name}");
+                            }
+                        }
+                    }
+
+                    if (_break)
+                        break;
+                }
+
+                buf = "";
+                wordBuffer.Clear();
+            }
+        }
+
+        public EGRPlaceChain GetChain(string name) {
+            return m_IOChain.Read(name);
         }
     }
 }

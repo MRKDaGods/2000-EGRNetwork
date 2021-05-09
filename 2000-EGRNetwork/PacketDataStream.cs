@@ -84,6 +84,10 @@ namespace MRK.Networking.Packets {
             return m_Reader.ReadSByte();
         }
 
+        public bool ReadBool() {
+            return m_Reader.ReadBoolean();
+        }
+
         public double ReadDouble() {
             return m_Reader.ReadDouble();
         }

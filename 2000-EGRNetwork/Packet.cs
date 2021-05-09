@@ -15,6 +15,10 @@ namespace MRK.Networking.Packets {
         XKEY = 0x01,
         //device info
         DEVINFO = 0x02,
+        //download request
+        DWNLDREQ = 0x03,
+        //download
+        DWNLD = 0x04,
 
         //register account
         REGACC = 0x10,
@@ -34,7 +38,10 @@ namespace MRK.Networking.Packets {
 
         //fetch places
         PLCFETCH = 0x30,
-
+        //fetch tile
+        TILEFETCH = 0x31,
+        //fetch place id
+        PLCIDFETCH = 0x32,
 
         MAX
     }

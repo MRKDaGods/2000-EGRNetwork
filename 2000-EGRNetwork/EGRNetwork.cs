@@ -15,6 +15,15 @@ namespace MRK.Networking {
         SUCCESS
     }
 
+    public class EGRDownloadRequest {
+        public ulong ID;
+        public NetPeer Peer;
+        public byte[][] Data;
+        public int Progress;
+        public DateTime RequestTime;
+        public bool Accepted;
+    }
+
     public class EGRNetwork {
         delegate void OnPacketReceivedDelegate(NetPeer peer, PacketType packet, PacketDataStream stream, int req);
         public delegate void DataWriteDelegate(PacketDataStream stream);
@@ -26,10 +35,12 @@ namespace MRK.Networking {
         OnPacketReceivedDelegate m_OnPacketReceived;
         readonly Dictionary<NetPeer, EGRSessionUser> m_Users;
         readonly Dictionary<PacketType, List<MethodInfo>> m_PacketHandlers;
+        readonly Dictionary<NetPeer, List<EGRDownloadRequest>> m_ActiveDownloads;
 
         public static EGRNetwork Instance { get; private set; }
         public EGRAccountManager AccountManager { get; private set; }
         public EGRPlaceManager PlaceManager { get; private set; }
+        public EGRTileManager TileManager { get; private set; }
 
         public EGRNetwork(int port, string key) {
             Instance = this;
@@ -63,9 +74,10 @@ namespace MRK.Networking {
             }
 
             (AccountManager = new EGRAccountManager()).Initialize(@"E:\EGRNetworkAlpha");
-            (PlaceManager = new EGRPlaceManager()).Initialize(@"E:\mrkwinrt\vsprojects\MRKGoogleSkimmer\MRKGoogleSkimmer\bin\Debug\Data", @"E:\EGRNetworkAlpha");
+            (PlaceManager = new EGRPlaceManager()).Initialize(@"E:\mrkwinrt\vsprojects\MRKGoogleSkimmer V2\MRKGoogleSkimmer V2\bin\x64\Debug\Data", @"E:\EGRNetworkAlpha");
+            (TileManager = new EGRTileManager()).Initialize(@"E:\EGRNetworkAlpha");
 
-            var x = PlaceManager.GetPlaces(30.02d, 30d, 31d, 31d, 0);
+            m_ActiveDownloads = new Dictionary<NetPeer, List<EGRDownloadRequest>>();
         }
 
         void OnConnectionRequest(ConnectionRequest request) {
@@ -140,6 +152,42 @@ namespace MRK.Networking {
 
         public void UpdateNetwork() {
             m_Network.PollEvents();
+
+            lock (m_ActiveDownloads) {
+                foreach (var pair in m_ActiveDownloads) {
+                    List<EGRDownloadRequest> removing = new List<EGRDownloadRequest>();
+                    foreach (EGRDownloadRequest request in pair.Value) {
+                        if (!request.Accepted) {
+                            if ((DateTime.Now - request.RequestTime).TotalSeconds >= 5d) {
+                                removing.Add(request);
+                                continue;
+                            }
+                        }
+
+                        bool incomplete = request.Progress < request.Data.Length;
+                        SendPacket(pair.Key, -1, PacketType.DWNLD, DeliveryMethod.ReliableUnordered, x => {
+                            x.WriteUInt64(request.ID);
+                            x.WriteInt32(request.Progress);
+                            x.WriteBool(incomplete);
+
+                            if (incomplete) {
+                                byte[] section = request.Data[request.Progress];
+                                x.WriteInt32(section.Length);
+                                foreach (byte b in section)
+                                    x.WriteByte(b);
+                            }
+                        });
+
+                        if (!incomplete) {
+                            //done!
+                            removing.Add(request);
+                        }
+                    }
+
+                    foreach (EGRDownloadRequest req in removing)
+                        m_ActiveDownloads[pair.Key].Remove(req);
+                }
+            }
         }
 
         public void SendPacket(NetPeer peer, int buf, PacketType packet, DeliveryMethod deliveryMethod, DataWriteDelegate writeDelegate) {
@@ -165,8 +213,85 @@ namespace MRK.Networking {
 
         void INTERNAL_OnPacketReceived(NetPeer peer, PacketType packet, PacketDataStream stream, int buf) {
             //process our packets
+
+            //manual packet handling
+            switch (packet) {
+
+                case PacketType.DWNLDREQ:
+                    ProcessInboundDownloadRequest(peer, stream.ReadUInt64(), stream.ReadBool());
+                    break;
+
+                case PacketType.DWNLD:
+                    ProcessInboundDownloadConfirmation(peer, stream.ReadUInt64());
+                    break;
+
+            }
+
             foreach (MethodInfo handler in m_PacketHandlers[packet]) {
                 handler.Invoke(null, new object[] { this, GetSessionUser(peer), stream, buf });
+            }
+        }
+
+        public EGRDownloadRequest CreateDownloadRequest(NetPeer peer, byte[] data) {
+            EGRDownloadRequest request = new EGRDownloadRequest {
+                Peer = peer,
+                ID = EGRUtils.GetRandomID()
+            };
+
+            //60000bytes is our limit
+            int sections = (int)Math.Ceiling(data.Length / 20000m);
+            byte[][] byteSectors = new byte[sections][];
+            for (int i = 0; i < sections; i++) {
+                byteSectors[i] = new byte[i == sections - 1 ? data.Length - i * 20000 : 20000];
+                for (int j = 0; j < byteSectors[i].Length; j++) {
+                    byteSectors[i][j] = data[i * 20000 + j];
+                }
+            }
+
+            request.Data = byteSectors;
+            return request;
+        }
+
+        public void StartDownload(EGRDownloadRequest request) {
+            //send req info to peer
+            if (request.Peer == null)
+                return;
+
+            SendPacket(request.Peer, -1, PacketType.DWNLDREQ, DeliveryMethod.ReliableOrdered, x => {
+                x.WriteUInt64(request.ID);
+                x.WriteInt32(request.Data.Length);
+            });
+
+            request.RequestTime = DateTime.Now;
+
+            lock (m_ActiveDownloads) {
+                if (!m_ActiveDownloads.ContainsKey(request.Peer)) {
+                    m_ActiveDownloads[request.Peer] = new List<EGRDownloadRequest>();
+                }
+
+                m_ActiveDownloads[request.Peer].Add(request);
+            }
+        }
+
+        void ProcessInboundDownloadRequest(NetPeer peer, ulong id, bool result) {
+            LogInfo($"download {id} req with res={result}");
+
+            lock (m_ActiveDownloads) {
+                if (!result) {
+                    if (m_ActiveDownloads.ContainsKey(peer))
+                        m_ActiveDownloads[peer].RemoveAll(x => x.ID == id);
+                    return;
+                }
+
+                m_ActiveDownloads[peer].Find(x => x.ID == id).Accepted = true;
+            }
+        }
+
+        void ProcessInboundDownloadConfirmation(NetPeer peer, ulong id) {
+            EGRDownloadRequest request = m_ActiveDownloads[peer].Find(x => x.ID == id);
+            if (request != null) {
+                LogInfo($"download {request.Progress} confirm");
+                request.Progress++;
             }
         }
     }
