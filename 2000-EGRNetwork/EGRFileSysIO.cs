@@ -7,6 +7,11 @@ namespace MRK {
     public abstract class EGRFileSysIO<T> {
         protected string m_Root;
         protected ReaderWriterLockSlim m_Lock;
+        readonly static List<string> ms_EmptyBuffer;
+
+        static EGRFileSysIO() {
+            ms_EmptyBuffer = new List<string>();
+        }
 
         public EGRFileSysIO(string dir) {
             m_Root = dir;
@@ -102,6 +107,10 @@ namespace MRK {
 
         //MUST ADD \ for subdir
         public IEnumerable<string> GetFiles(string sub = "") {
+            string dir = m_Root + sub;
+            if (!Directory.Exists(dir))
+                return ms_EmptyBuffer;
+
             return Directory.EnumerateFiles(m_Root + sub);
         }
 
