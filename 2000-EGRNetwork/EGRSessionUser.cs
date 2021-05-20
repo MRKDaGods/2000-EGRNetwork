@@ -13,9 +13,11 @@ namespace MRK.Networking {
         public string HWID { get; private set; }
         public EGRAccount Account { get; private set; }
         public EGRToken Token { get; set; }
+        public HashSet<string> SentCIDs { get; private set; }
 
         public EGRSessionUser(NetPeer peer) {
             Peer = peer;
+            SentCIDs = new HashSet<string>();
         }
 
         public void AssignXorKey(string key) {

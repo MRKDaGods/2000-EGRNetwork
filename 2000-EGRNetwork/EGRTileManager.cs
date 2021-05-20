@@ -103,5 +103,17 @@ namespace MRK {
 
             LogInfo($"Tiles added = {tileCount}");
         }
+
+        public static EGRTileID GetTileFromCoords(double lat, double lng, int zoom) {
+            int x = (int)Math.Floor((lng + 180.0) / 360.0 * Math.Pow(2.0, zoom));
+            int y = (int)Math.Floor((1.0 - Math.Log(Math.Tan(lat * Math.PI / 180.0)
+                    + 1.0 / Math.Cos(lat * Math.PI / 180.0)) / Math.PI) / 2.0 * Math.Pow(2.0, zoom));
+
+            return new EGRTileID {
+                Z = zoom,
+                X = x,
+                Y = y
+            };
+        }
     }
 }

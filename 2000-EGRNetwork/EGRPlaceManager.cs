@@ -11,6 +11,7 @@ namespace MRK {
         const double MAX_LAT = 31.90d;
         const double MIN_LNG = 25.13d;
         const double MAX_LNG = 36.84d;
+        const int MAX_PLACE_COUNT = 32;
 
         readonly string[] m_VisualFormatPrefix;
         string m_RootPath;
@@ -209,7 +210,32 @@ namespace MRK {
             return str;
         }
 
-        public List<EGRPlace> GetPlaces(double minLat, double minLng, double maxLat, double maxLng, int zoomLvl) {
+        bool CanIncludePlace(string cid, int desiredZoom, out EGRPlace place) {
+            place = m_IOPlace.Read(cid);
+            if (place == null)
+                return false;
+
+            int zMin = 7, zMax = 21;
+            //manual matching for now?
+            EGRPlaceType primaryType = place.Types.Length > 1 ? place.Types[1] : EGRPlaceType.None;
+            switch (primaryType) {
+
+                default:
+                case EGRPlaceType.None:
+                    zMin = 15;
+                    break;
+
+                case EGRPlaceType.Mall:
+                    zMin = 5;
+                    zMax = 21;
+                    break;
+
+            }
+
+            return desiredZoom >= zMin && desiredZoom <= zMax;
+        }
+
+        public List<EGRPlace> GetPlaces(double minLat, double minLng, double maxLat, double maxLng, int zoomLvl, HashSet<string> mask = null) {
             minLat = Math.Max(minLat, MIN_LAT);
             minLng = Math.Max(minLng, MIN_LNG);
             maxLat = Math.Min(maxLat, MAX_LAT);
@@ -234,8 +260,19 @@ namespace MRK {
 
                 foreach (string cid in cids) {
                     if (qualifying.Contains(cid)) {
-                        //PLACE found
-                        ret.Add(m_IOPlace.Read(cid));
+                        if (ret.Count >= MAX_PLACE_COUNT)
+                            break;
+
+                        if (mask != null && mask.Contains(cid)) {
+                            LogInfo($"masked cid {cid}");
+                            continue;
+                        }
+
+                        EGRPlace place;
+                        if (CanIncludePlace(cid, zoomLvl, out place)) {
+                            //PLACE found
+                            ret.Add(place);
+                        }
                     }
                 }
             }

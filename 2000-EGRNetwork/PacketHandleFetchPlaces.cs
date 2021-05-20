@@ -11,8 +11,8 @@ namespace MRK.Networking.Packets {
             }
 
             if (sessionUser.Account == null) {
-                LogError($"[{sessionUser.Peer.Id}] is not logged in, hwid={sessionUser.HWID}");
-                return;
+                //LogError($"[{sessionUser.Peer.Id}] is not logged in, hwid={sessionUser.HWID}");
+                //return;
             }
 
             ulong cid = stream.ReadUInt64();
