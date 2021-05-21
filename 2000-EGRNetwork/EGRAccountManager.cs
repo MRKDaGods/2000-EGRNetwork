@@ -95,8 +95,10 @@ namespace MRK {
                 return false;
 
             //Validate?
-
             EGRAccount acc = new EGRAccount(name, email, sessionUser.Account.Password, gender, sessionUser.HWID);
+            if (m_IOAccount.Exists(acc)) //account already exists
+                return false;
+
             m_IOAccount.Write(acc);
             sessionUser.AssignAccount(acc);
             return true;
