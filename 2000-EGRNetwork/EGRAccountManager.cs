@@ -141,6 +141,7 @@ namespace MRK {
                 if (tk == null)
                     return false;
 
+                m_IOToken.ChangeIndexOwner(tk.UUID, acc.UUID);
                 tk.UUID = acc.UUID;
                 m_IOToken.Write(tk);
                 m_IOAccount.Delete(sessionUser.Account);

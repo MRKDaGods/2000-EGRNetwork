@@ -218,6 +218,10 @@ namespace MRK {
                 File.Delete(dir);
         }
 
+        public void ChangeIndexOwner(string oldUuid, string newUuid) {
+            Directory.Move($"{m_TokenIndexPath}\\{oldUuid}", $"{m_TokenIndexPath}\\{newUuid}");
+        }
+
         public List<EGRToken> GetTokensForUUID(string uuid) {
             List<EGRToken> tokens = new List<EGRToken>();
 
