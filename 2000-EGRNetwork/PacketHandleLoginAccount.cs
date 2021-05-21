@@ -39,6 +39,7 @@ namespace MRK.Networking.Packets {
                     x.WriteString(acc.Email);
                     x.WriteSByte(acc.Gender);
                     x.WriteString(sessionUser.Token.Token);
+                    x.WriteString(acc.Password);
                 }
             });
         }

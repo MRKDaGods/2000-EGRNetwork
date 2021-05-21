@@ -1,5 +1,6 @@
 ﻿using MRK.Networking;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 
@@ -89,8 +90,38 @@ namespace MRK {
             return true;
         }
 
+        public bool UpdatePassword(string token, string pass, bool logoutAll, EGRSessionUser sessionUser) {
+            if (sessionUser.Token == null)
+                return false;
+
+            if (sessionUser.Token.Token != token)
+                return false;
+
+            if (sessionUser.Account == null)
+                return false;
+
+            EGRAccount acc = new EGRAccount(sessionUser.Account.FullName, sessionUser.Account.Email, pass, sessionUser.Account.Gender, sessionUser.HWID);
+            if (logoutAll) {
+                //delete other tokens
+                List<EGRToken> tokens = m_IOToken.GetTokensForUUID(acc.UUID);
+                foreach (EGRToken t in tokens) {
+                    if (t.Token == token)
+                        continue;
+
+                    m_IOToken.Delete(t);
+                }
+            }
+
+            m_IOAccount.Write(acc);
+            sessionUser.AssignAccount(acc);
+            return true;
+        }
+
         public bool UpdateAccountInfo(string token, string name, string email, sbyte gender, EGRSessionUser sessionUser) {
             //so sessionUser.Account should be our acc, lets compare tokens?
+            if (sessionUser.Token == null)
+                return false;
+
             if (sessionUser.Token.Token != token)
                 return false;
 
@@ -99,17 +130,21 @@ namespace MRK {
 
             //Validate?
             EGRAccount acc = new EGRAccount(name, email, sessionUser.Account.Password, gender, sessionUser.HWID);
-            if (m_IOAccount.Exists(acc)) //account already exists
-                return false;
 
-            //this is tricky
-            //get his token, re route UIDs
-            EGRToken tk = m_IOToken.Read(sessionUser.HWID, token);
-            if (tk == null)
-                return false;
+            if (sessionUser.Account.Email != acc.Email) {
+                if (m_IOAccount.Exists(acc)) //account already exists
+                    return false;
 
-            tk.UUID = acc.UUID;
-            m_IOToken.Write(tk);
+                //this is tricky
+                //get his token, re route UIDs
+                EGRToken tk = m_IOToken.Read(sessionUser.HWID, token);
+                if (tk == null)
+                    return false;
+
+                tk.UUID = acc.UUID;
+                m_IOToken.Write(tk);
+                m_IOAccount.Delete(sessionUser.Account);
+            }
 
             m_IOAccount.Write(acc);
             sessionUser.AssignAccount(acc);
@@ -136,6 +171,7 @@ namespace MRK {
             };
 
             m_IOToken.Write(token);
+            m_IOToken.IndexToken(token);
             return token;
         }
 

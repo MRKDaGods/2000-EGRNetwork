@@ -57,5 +57,9 @@ namespace MRK {
                 return sb.ToString();
             }
         }
+
+        public bool IsDeviceID() {
+            return Email.EndsWith("@egr.com");
+        }
     }
 }
