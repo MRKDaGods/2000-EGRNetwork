@@ -94,10 +94,22 @@ namespace MRK {
             if (sessionUser.Token.Token != token)
                 return false;
 
+            if (sessionUser.Account == null)
+                return false;
+
             //Validate?
             EGRAccount acc = new EGRAccount(name, email, sessionUser.Account.Password, gender, sessionUser.HWID);
             if (m_IOAccount.Exists(acc)) //account already exists
                 return false;
+
+            //this is tricky
+            //get his token, re route UIDs
+            EGRToken tk = m_IOToken.Read(sessionUser.HWID, token);
+            if (tk == null)
+                return false;
+
+            tk.UUID = acc.UUID;
+            m_IOToken.Write(tk);
 
             m_IOAccount.Write(acc);
             sessionUser.AssignAccount(acc);
