@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -114,6 +115,12 @@ namespace MRK {
             }
 
             network.TileManager.AddTilesFromFile(path, tileset);
+        }
+
+        static void __cmd_test(string[] args, EGRNetwork network) {
+            WebClient wc = new WebClient();
+            string res = wc.DownloadString(new Uri("https://api.mapbox.com/directions/v5/mapbox/driving/30.9416872837362%2C30.071121507752316%3B30.957293813885634%2C30.063245685427646?alternatives=true&geometries=geojson&steps=true&access_token=pk.eyJ1IjoiMjAwMGVneXB0IiwiYSI6ImNrbHI5dnlwZTBuNTgyb2xsOTRvdnQyN2QifQ.fOW4YjVUAE5fjwtL9Etajg"));
+            WriteLine(res);
         }
     }
 }

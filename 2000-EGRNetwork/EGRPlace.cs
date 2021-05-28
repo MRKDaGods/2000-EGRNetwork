@@ -131,9 +131,34 @@ namespace MRK {
 
             //manual matching
             Add(EGRPlaceType.Restaurant, "restaurant", "fast food", "fast-food");
-            Add(EGRPlaceType.Delivery, "delivery");
             Add(EGRPlaceType.Gym, "gym", "fitness club", "fitness center", "fitness centre");
             Add(EGRPlaceType.Smoking, "smoking", "smoke", "cigarette");
+            Add(EGRPlaceType.Religion, "church", "mosque", "مسجد", "كنيسة");
+            Add(EGRPlaceType.Cinema, "cinema", "theatre", "cineplex", "movie theatre", "movie theater", "theater");
+            Add(EGRPlaceType.Park, "park", "playground");
+            Add(EGRPlaceType.Pharmacy, "pharmacy", "drugstore", "drug", "drug store");
+            Add(EGRPlaceType.Mall, "mall", "city centre", "city center", "shopping centre", "shopping center", "plaza", "galleria", "strip mall");
+            Add(EGRPlaceType.Museum, "museum", "exhibit", "gallery");
+            Add(EGRPlaceType.Library, "library", "bibliotheca", "book centre", "book center", "information centre", "information center", "book room");
+            Add(EGRPlaceType.Grocery, "grocery", "supermarket", "market", "super market", "minimarker");
+            Add(EGRPlaceType.Apparel, "apparel", "clothes", "clothing", "garments", "dress", "outfit", "costume");
+            Add(EGRPlaceType.Electronics, "electronic", "electronics", "mobile", "laptop", "mobiles", "laptops", "computer", "computers", "smartphone", "smart phone");
+            Add(EGRPlaceType.Sport, "sport", "sports", "sporting", "stadium", "training", "football", "soccer", "tennis", "squash", "basketball", "sport club");
+            Add(EGRPlaceType.BeautySupply, "beauty supply", "beauty supplies", "makeup", "beauty shop", "cosmetic", "cosmetics");
+            //HOME
+            Add(EGRPlaceType.CarDealer, "car dealer", "automotive");
+            Add(EGRPlaceType.CarRental, "car rental");
+            Add(EGRPlaceType.Convenience, "convenience", "convenience store");
+            Add(EGRPlaceType.Hotel, "hotel", "motel");
+            Add(EGRPlaceType.ATM, "atm", "atms");
+            Add(EGRPlaceType.Gas, "gas station");
+            Add(EGRPlaceType.Hospital, "hospital", "medical center", "medical centre", "clinic", "health centre", "health center");
+            Add(EGRPlaceType.CarWash, "car wash");
+            Add(EGRPlaceType.Parking, "parking", "car station", "bus stop");
+            Add(EGRPlaceType.BeautySalons, "beauty salon", "beauty center", "beauty centre", "spa", "hairdresser", "hair dresser", "barber", "salon");
+            Add(EGRPlaceType.EVC, "electric vehicle", "charging station");
+
+            Add(EGRPlaceType.Delivery, "delivery");
 
             //auto fill empty
             for (EGRPlaceType type = EGRPlaceType.None + 1; type < EGRPlaceType.MAX; type++) {
