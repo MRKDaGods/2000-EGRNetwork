@@ -11,7 +11,7 @@ namespace MRK {
         const double MAX_LAT = 31.90d;
         const double MIN_LNG = 25.13d;
         const double MAX_LNG = 36.84d;
-        const int MAX_PLACE_COUNT = 10;
+        const int MAX_PLACE_COUNT = 5;
 
         readonly string[] m_VisualFormatPrefix;
         string m_RootPath;
