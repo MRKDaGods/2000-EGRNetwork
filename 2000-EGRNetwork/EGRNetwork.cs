@@ -25,6 +25,8 @@ namespace MRK.Networking {
     }
 
     public class EGRNetwork {
+        const int WORKER_COUNT = 4;
+
         delegate void OnPacketReceivedDelegate(NetPeer peer, PacketType packet, PacketDataStream stream, int req);
         public delegate void DataWriteDelegate(PacketDataStream stream);
 
@@ -36,6 +38,8 @@ namespace MRK.Networking {
         readonly Dictionary<NetPeer, EGRSessionUser> m_Users;
         readonly Dictionary<PacketType, List<MethodInfo>> m_PacketHandlers;
         readonly Dictionary<NetPeer, List<EGRDownloadRequest>> m_ActiveDownloads;
+        readonly MRKWorker[] m_Workers;
+        int m_LastWorkerIdx;
 
         public static EGRNetwork Instance { get; private set; }
         public EGRAccountManager AccountManager { get; private set; }
@@ -78,6 +82,12 @@ namespace MRK.Networking {
             (TileManager = new EGRTileManager()).Initialize(@"E:\EGRNetworkAlpha");
 
             m_ActiveDownloads = new Dictionary<NetPeer, List<EGRDownloadRequest>>();
+
+            m_Workers = new MRKWorker[WORKER_COUNT];
+            for (int i = 0; i < WORKER_COUNT; i++) {
+                m_Workers[i] = new MRKWorker();
+                m_Workers[i].StartWorker();
+            }
         }
 
         void OnConnectionRequest(ConnectionRequest request) {
@@ -122,7 +132,8 @@ namespace MRK.Networking {
         }
 
         void OnReceive(NetPeer peer, NetPacketReader reader, DeliveryMethod method) {
-            new Thread(() => {
+            int wIdx = m_LastWorkerIdx;
+            m_Workers[m_LastWorkerIdx++].Queue(() => {
                 try {
                     PacketNature nature = PacketNature.Out;//(PacketNature)reader.GetByte();
                     PacketType type = (PacketType)reader.GetUShort();
@@ -134,13 +145,16 @@ namespace MRK.Networking {
 
                     m_OnPacketReceived?.Invoke(peer, type, dataStream, bufferedReq);
 
-                    WriteLine($"[{peer.Id}] packet, n={nature}, t={type}, SZ={dataStream.Data.Length} bytes");
+                    WriteLine($"[{peer.Id}] packet, n={nature}, t={type}, SZ={dataStream.Data.Length} bytes, w={wIdx}");
 
                     dataStream.Clean();
                 }
                 catch {
                 }
-            }).Start();
+            });
+
+            if (m_LastWorkerIdx == WORKER_COUNT)
+                m_LastWorkerIdx = 0;
         }
 
         public bool Start() {

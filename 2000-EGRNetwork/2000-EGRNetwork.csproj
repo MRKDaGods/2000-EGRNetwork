@@ -66,6 +66,7 @@
     <Compile Include="Layers\Crc32cLayer.cs" />
     <Compile Include="Layers\PacketLayerBase.cs" />
     <Compile Include="Layers\XorEncryptLayer.cs" />
+    <Compile Include="MRKWorker.cs" />
     <Compile Include="NativeSocket.cs" />
     <Compile Include="NatPunchModule.cs" />
     <Compile Include="NetConstants.cs" />
@@ -84,10 +85,12 @@
     <Compile Include="PacketHandleFetchPlacesIDs.cs" />
     <Compile Include="PacketHandleFetchPlacesV2.cs" />
     <Compile Include="PacketHandleFetchTile.cs" />
+    <Compile Include="PacketHandleGeoAutoComplete.cs" />
     <Compile Include="PacketHandleLoginAccount.cs" />
     <Compile Include="PacketHandleLoginAccountDev.cs" />
     <Compile Include="PacketHandleLoginAccountToken.cs" />
     <Compile Include="PacketHandleLogoutAccount.cs" />
+    <Compile Include="PacketHandleQueryDirections.cs" />
     <Compile Include="PacketHandlerAttribute.cs" />
     <Compile Include="PacketHandleRegisterAccount.cs" />
     <Compile Include="PacketHandleUpdateAccountInfo.cs" />
