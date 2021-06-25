@@ -46,7 +46,7 @@ namespace MRK.Networking {
         public EGRPlaceManager PlaceManager { get; private set; }
         public EGRTileManager TileManager { get; private set; }
 
-        public EGRNetwork(int port, string key) {
+        public EGRNetwork(int port, string key, params string[] paths) {
             Instance = this;
 
             m_Key = key;
@@ -77,9 +77,9 @@ namespace MRK.Networking {
                 m_PacketHandlers[type] = handlers;
             }
 
-            (AccountManager = new EGRAccountManager()).Initialize(@"E:\EGRNetworkAlpha");
-            (PlaceManager = new EGRPlaceManager()).Initialize(@"E:\mrkwinrt\vsprojects\MRKGoogleSkimmer V2\MRKGoogleSkimmer V2\bin\x64\Debug\Data", @"E:\EGRNetworkAlpha");
-            (TileManager = new EGRTileManager()).Initialize(@"E:\EGRNetworkAlpha");
+            (AccountManager = new EGRAccountManager()).Initialize(paths[0]);
+            (PlaceManager = new EGRPlaceManager()).Initialize(paths[1], paths[0]);
+            (TileManager = new EGRTileManager()).Initialize(paths[0]);
 
             m_ActiveDownloads = new Dictionary<NetPeer, List<EGRDownloadRequest>>();
 

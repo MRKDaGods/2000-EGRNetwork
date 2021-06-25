@@ -26,7 +26,7 @@ namespace MRK.Networking {
         void _main() {
             WriteLine("EGR Main Network v1");
             WriteLine("Starting...");
-            m_Network = new EGRNetwork(EGR_MAIN_NETWORK_PORT, EGR_MAIN_NETWORK_KEY);
+            m_Network = new EGRNetwork(EGR_MAIN_NETWORK_PORT, EGR_MAIN_NETWORK_KEY, @"E:\EGRNetworkAlpha", @"E:\mrkwinrt\vsprojects\MRKGoogleSkimmer V2\MRKGoogleSkimmer V2\bin\x64\Debug\Data");
             if (!m_Network.Start()) {
                 WriteLine("Failed to start..");
                 Exit();
