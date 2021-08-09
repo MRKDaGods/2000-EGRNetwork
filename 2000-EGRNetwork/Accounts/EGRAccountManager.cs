@@ -42,7 +42,7 @@ namespace MRK {
             if (tmp.Password != phash)
                 return false;
 
-            //add hwid check?
+            //add hwid check? no, don't -from cam
             DeleteHWIDTokenIfExists(user.HWID, tmp.UUID);
 
             EGRToken token = GenerateNewToken(tmp.UUID, user.HWID);

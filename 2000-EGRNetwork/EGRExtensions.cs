@@ -46,5 +46,27 @@ namespace MRK {
         public static bool EOF(this BinaryReader binaryReader) {
             return binaryReader.BaseStream.Position == binaryReader.BaseStream.Length;
         }
+
+        public static string StringifyArray<T>(this T[] arr, char sep = ',') {
+            if (arr.Length == 0)
+                return string.Empty;
+
+            string str = "";
+            foreach (T t in arr)
+                str += t.ToString() + sep;
+
+            return str[0..^1]; //remove trailing sep
+        }
+
+        public static string StringifyList<T>(this List<T> list, char sep = ',') {
+            if (list.Count == 0)
+                return string.Empty;
+
+            string str = "";
+            foreach (T t in list)
+                str += t.ToString() + sep;
+
+            return str[0..^1]; //remove trailing sep
+        }
     }
 }

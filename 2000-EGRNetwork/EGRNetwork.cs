@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Threading;
+using MRK.WTE;
 
 using static MRK.EGRLogger;
 using static System.Console;
@@ -45,9 +45,12 @@ namespace MRK.Networking {
         public EGRAccountManager AccountManager { get; private set; }
         public EGRPlaceManager PlaceManager { get; private set; }
         public EGRTileManager TileManager { get; private set; }
+        public EGRWTE WTE { get; private set; }
 
-        public EGRNetwork(int port, string key, params string[] paths) {
+        public EGRNetwork(string name, int port, string key, params string[] paths) {
             Instance = this;
+
+            LogInfo($"Initializing network, name={name} port={port} key={key}, paths=[{paths.StringifyArray()}]");
 
             m_Key = key;
             m_Users = new Dictionary<NetPeer, EGRSessionUser>();
@@ -80,6 +83,7 @@ namespace MRK.Networking {
             (AccountManager = new EGRAccountManager()).Initialize(paths[0]);
             (PlaceManager = new EGRPlaceManager()).Initialize(paths[1], paths[0]);
             (TileManager = new EGRTileManager()).Initialize(paths[0]);
+            WTE = new EGRWTE(paths[2]);
 
             m_ActiveDownloads = new Dictionary<NetPeer, List<EGRDownloadRequest>>();
 
@@ -165,6 +169,9 @@ namespace MRK.Networking {
         }
 
         public void UpdateNetwork() {
+            if (!EGRMain.Instance.IsRunning)
+                return;
+
             m_Network.PollEvents();
 
             lock (m_ActiveDownloads) {
@@ -307,6 +314,10 @@ namespace MRK.Networking {
                 LogInfo($"download {request.Progress} confirm");
                 request.Progress++;
             }
+        }
+
+        public void Stop() {
+            m_Network.Stop();
         }
     }
 }

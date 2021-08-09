@@ -1,47 +1,58 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using MRK.Networking;
 using System.Threading;
-using MRK.Networking.Packets;
-
+using static MRK.EGRLogger;
 using static System.Console;
 
-namespace MRK.Networking {
+namespace MRK {
     public class EGRMain {
-        const int EGR_MAIN_NETWORK_PORT = 23466;
-        const string EGR_MAIN_NETWORK_KEY = "ntxsdI8cp4JEVcosVwz1";
-
-        static EGRMain ms_Instance;
-
+        EGRNetworkConfig m_Config;
         EGRNetwork m_Network;
-        
-        public static void Main(string[] args) {
-            if (ms_Instance == null)
-                ms_Instance = new EGRMain();
 
-            ms_Instance._main();
+        public static EGRMain Instance { get; private set; }
+        public bool IsRunning { get; set; }
+        public EGRNetworkConfig Config => m_Config;
+
+        public static void Main(string[] _) {
+            if (Instance == null)
+                Instance = new EGRMain();
+
+            Instance._main();
         }
 
         void _main() {
-            WriteLine("EGR Main Network v1");
-            WriteLine("Starting...");
-            m_Network = new EGRNetwork(EGR_MAIN_NETWORK_PORT, EGR_MAIN_NETWORK_KEY, @"E:\EGRNetworkAlpha", @"E:\mrkwinrt\vsprojects\MRKGoogleSkimmer V2\MRKGoogleSkimmer V2\bin\x64\Debug\Data");
-            if (!m_Network.Start()) {
-                WriteLine("Failed to start..");
+            IsRunning = true;
+
+            LogInfo("2000-EGR Network - MRKDaGods(Mohamed Ammar)");
+            LogInfo("Starting...");
+
+            m_Config = new EGRNetworkConfig();
+            if (!m_Config.Load()) {
+                m_Config.WriteDefaultConfig(); //create config file
+                LogError("Network config loading failed...");
                 Exit();
                 return;
             }
 
-            WriteLine($"Started EGR Main Network, port={EGR_MAIN_NETWORK_PORT}, key={EGR_MAIN_NETWORK_KEY}");
+            m_Network = new EGRNetwork("MAIN", int.Parse(m_Config["NET_PORT"]), m_Config["NET_KEY"], m_Config["NET_WORKING_DIR"], 
+                m_Config["NET_PLACES_SRC_DIR"], m_Config["NET_WTE_DB_PATH"]);
+            if (!m_Network.Start()) {
+                LogInfo("Failed to start!");
+                Exit();
+                return;
+            }
 
-            while (true) {
+            LogInfo($"Network successfully initialized");
+
+            int threadInterval = int.Parse(m_Config["NET_THREAD_INTERVAL"]);
+            LogInfo($"Network thread interval={threadInterval}ms");
+
+            while (IsRunning) {
                 if (KeyAvailable) {
                     EGRCommandManager.Execute(ReadLine());
                 }
 
                 m_Network.UpdateNetwork();
-                Thread.Sleep(100);
+                Thread.Sleep(threadInterval);
             }
 
             Exit();

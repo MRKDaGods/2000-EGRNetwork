@@ -40,5 +40,9 @@ namespace MRK.Networking {
 
             LogInfo($"[{Peer.Id}] Assigned account, token={Token.Token}");
         }
+
+        public static bool IsValidUser(EGRSessionUser user) {
+            return user != null && !string.IsNullOrEmpty(user.HWID) && user.Account != null;
+        }
     }
 }

@@ -215,9 +215,11 @@ namespace MRK {
             if (place == null)
                 return false;
 
-            int zMin = 7, zMax = 21;
-            //manual matching for now?
+            //manual matching for now? maybe
             EGRPlaceType primaryType = place.Types.Length > 1 ? place.Types[1] : EGRPlaceType.None;
+            int zMin;
+            int zMax = 21;
+
             switch (primaryType) {
 
                 case EGRPlaceType.Restaurant:

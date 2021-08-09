@@ -6,7 +6,9 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+
 using static System.Console;
+using static MRK.EGRLogger;
 
 namespace MRK {
     public class EGRCommandManager {
@@ -32,6 +34,13 @@ namespace MRK {
 
         static bool IsStringInvalid(string s) {
             return string.IsNullOrEmpty(s) || string.IsNullOrWhiteSpace(s);
+        }
+
+        static void __cmd_exit(string[] args, EGRNetwork network) {
+            LogInfo("Exiting...");
+
+            network.Stop();
+            EGRMain.Instance.IsRunning = false;
         }
 
         static void __cmd_genidx(string[] args, EGRNetwork network) {

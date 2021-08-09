@@ -56,6 +56,9 @@ namespace MRK.Networking.Packets {
         //query directions
         QUERYDIRS = 0x41,
 
+        //wte query
+        WTEQUERY = 0x50,
+
         MAX
     }
 

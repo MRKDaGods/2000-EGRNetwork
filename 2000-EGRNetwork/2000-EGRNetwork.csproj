@@ -1,117 +1,12 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{419D2C86-9B29-4717-9B1E-D4DBC6940625}</ProjectGuid>
+    <TargetFramework>net5.0</TargetFramework>
     <OutputType>Exe</OutputType>
-    <RootNamespace>_2000_EGRNetwork</RootNamespace>
-    <AssemblyName>2000-EGRNetwork</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Deterministic>true</Deterministic>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <RootNamespace>MRK</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="BaseChannel.cs" />
-    <Compile Include="EGRAccount.cs" />
-    <Compile Include="EGRAccountManager.cs" />
-    <Compile Include="EGRCommandManager.cs" />
-    <Compile Include="EGRExtensions.cs" />
-    <Compile Include="EGRFileSysIO.cs" />
-    <Compile Include="EGRLogger.cs" />
-    <Compile Include="EGRMain.cs" />
-    <Compile Include="EGRNetwork.cs" />
-    <Compile Include="EGRNetworkOLD.cs" />
-    <Compile Include="EGRPlace.cs" />
-    <Compile Include="EGRPlaceManager.cs" />
-    <Compile Include="EGRSessionUser.cs" />
-    <Compile Include="EGRTileManager.cs" />
-    <Compile Include="EGRUserInfo.cs" />
-    <Compile Include="EGRUtils.cs" />
-    <Compile Include="ConnectionRequest.cs" />
-    <Compile Include="FakeDatabase.cs" />
-    <Compile Include="INetEventListener.cs" />
-    <Compile Include="Layers\Crc32cLayer.cs" />
-    <Compile Include="Layers\PacketLayerBase.cs" />
-    <Compile Include="Layers\XorEncryptLayer.cs" />
-    <Compile Include="MRKWorker.cs" />
-    <Compile Include="NativeSocket.cs" />
-    <Compile Include="NatPunchModule.cs" />
-    <Compile Include="NetConstants.cs" />
-    <Compile Include="NetDebug.cs" />
-    <Compile Include="NetManager.cs" />
-    <Compile Include="NetPacket.cs" />
-    <Compile Include="NetPacketPool.cs" />
-    <Compile Include="NetPeer.cs" />
-    <Compile Include="NetSocket.cs" />
-    <Compile Include="NetStatistics.cs" />
-    <Compile Include="NetUtils.cs" />
-    <Compile Include="Packet.cs" />
-    <Compile Include="PacketDataStream.cs" />
-    <Compile Include="PacketHandleDeviceInfo.cs" />
-    <Compile Include="PacketHandleFetchPlaces.cs" />
-    <Compile Include="PacketHandleFetchPlacesIDs.cs" />
-    <Compile Include="PacketHandleFetchPlacesV2.cs" />
-    <Compile Include="PacketHandleFetchTile.cs" />
-    <Compile Include="PacketHandleGeoAutoComplete.cs" />
-    <Compile Include="PacketHandleLoginAccount.cs" />
-    <Compile Include="PacketHandleLoginAccountDev.cs" />
-    <Compile Include="PacketHandleLoginAccountToken.cs" />
-    <Compile Include="PacketHandleLogoutAccount.cs" />
-    <Compile Include="PacketHandleQueryDirections.cs" />
-    <Compile Include="PacketHandlerAttribute.cs" />
-    <Compile Include="PacketHandleRegisterAccount.cs" />
-    <Compile Include="PacketHandleUpdateAccountInfo.cs" />
-    <Compile Include="PacketInSessionKey.cs" />
-    <Compile Include="PacketOutHandleUpdatePassword.cs" />
-    <Compile Include="PacketOutSessionKey.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ReliableChannel.cs" />
-    <Compile Include="SequencedChannel.cs" />
-    <Compile Include="Utils\CRC32C.cs" />
-    <Compile Include="Utils\FastBitConverter.cs" />
-    <Compile Include="Utils\INetSerializable.cs" />
-    <Compile Include="Utils\NetDataReader.cs" />
-    <Compile Include="Utils\NetDataWriter.cs" />
-    <Compile Include="Utils\NetPacketProcessor.cs" />
-    <Compile Include="Utils\NetSerializer.cs" />
-    <Compile Include="Utils\NtpPacket.cs" />
-    <Compile Include="Utils\NtpRequest.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
