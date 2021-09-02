@@ -37,7 +37,7 @@ namespace MRK.Networking.Packets {
             double maxLng = stream.ReadDouble();
             int zoomLvl = stream.ReadInt32();
 
-            List<EGRPlace> places = network.PlaceManager.GetPlaces(minLat, minLng, maxLat, maxLng, zoomLvl, sessionUser.SentCIDs);
+            List<EGRPlace> places = EGRMain.Instance.PlaceManager.GetPlaces(minLat, minLng, maxLat, maxLng, zoomLvl, sessionUser.SentCIDs);
             string realTileHash = Hash(places);
             if (realTileHash == tileHash) {
                 LogInfo($"Client has matching hash {tileHash}");

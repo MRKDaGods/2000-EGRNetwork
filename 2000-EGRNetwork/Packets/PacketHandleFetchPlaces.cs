@@ -17,7 +17,7 @@ namespace MRK.Networking.Packets {
 
             ulong cid = stream.ReadUInt64();
 
-            EGRPlace place = network.PlaceManager.GetPlace(cid);
+            EGRPlace place = EGRMain.Instance.PlaceManager.GetPlace(cid);
             LogInfo($"[{sessionUser.Peer.Id}] fetchplc, {cid}");
 
             network.SendPacket(sessionUser.Peer, buffer, PacketType.PLCFETCH, DeliveryMethod.ReliableOrdered, (x) => {

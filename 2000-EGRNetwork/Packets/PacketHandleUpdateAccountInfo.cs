@@ -19,7 +19,7 @@ namespace MRK.Networking.Packets {
             string email = stream.ReadString();
             sbyte gender = stream.ReadSByte();
 
-            bool success = network.AccountManager.UpdateAccountInfo(token, name, email, gender, sessionUser);
+            bool success = EGRMain.Instance.AccountManager.UpdateAccountInfo(token, name, email, gender, sessionUser);
             LogInfo($"[{sessionUser.Peer.Id}] update acc info, em={email}, name={name}, gender={gender}, hwid={sessionUser.HWID}, result={success}");
 
             network.SendStandardResponsePacket(sessionUser.Peer, buffer, success ? EGRStandardResponse.SUCCESS : EGRStandardResponse.FAILED);

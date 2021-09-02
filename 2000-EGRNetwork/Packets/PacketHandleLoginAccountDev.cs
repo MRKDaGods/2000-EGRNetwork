@@ -23,7 +23,7 @@ namespace MRK.Networking.Packets {
             string deviceModel = stream.ReadString();
 
             EGRAccount acc;
-            bool success = network.AccountManager.LoginAccountDev(deviceName, deviceModel, sessionUser, out acc);
+            bool success = EGRMain.Instance.AccountManager.LoginAccountDev(deviceName, deviceModel, sessionUser, out acc);
             if (success) {
                 sessionUser.AssignAccount(acc);
             }

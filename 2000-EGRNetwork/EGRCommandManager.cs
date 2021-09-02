@@ -11,7 +11,7 @@ using static System.Console;
 using static MRK.EGRLogger;
 
 namespace MRK {
-    public class EGRCommandManager {
+    public class EGRCommandManager : EGRBase {
         public static void Execute(string cmd) {
             string[] cmdline = cmd.Trim(' ', '\t').Split(' ');
             if (cmdline.Length == 0 || cmdline[0].Length == 0)
@@ -25,7 +25,7 @@ namespace MRK {
 
             string[] args = new string[cmdline.Length - 1];
             Array.Copy(cmdline, 1, args, 0, args.Length);
-            mInfo.Invoke(null, new object[2] { args, EGRNetwork.Instance });
+            mInfo.Invoke(null, new object[2] { args, EGRMain.Instance.MainNetwork });
         }
 
         static T TryGetElement<T>(T[] array, int idx) {
@@ -40,7 +40,7 @@ namespace MRK {
             LogInfo("Exiting...");
 
             network.Stop();
-            EGRMain.Instance.IsRunning = false;
+            Client.IsRunning = false;
         }
 
         static void __cmd_genidx(string[] args, EGRNetwork network) {
@@ -54,11 +54,11 @@ namespace MRK {
             switch (prop) {
 
                 case "types":
-                    network.PlaceManager.CreateTypeIndexFolders();
+                    Client.PlaceManager.CreateTypeIndexFolders();
                     break;
 
                 case "places":
-                    network.PlaceManager.CreateIndexFolders();
+                    Client.PlaceManager.CreateIndexFolders();
                     break;
 
                 default:
@@ -69,9 +69,9 @@ namespace MRK {
         }
 
         static void __cmd_idxtypes(string[] args, EGRNetwork network) {
-            List<EGRPlace> places = network.PlaceManager.GetAllPlaces();
+            List<EGRPlace> places = Client.PlaceManager.GetAllPlaces();
             foreach (EGRPlace place in places)
-                network.PlaceManager.GeneratePlaceTypes(place);
+                Client.PlaceManager.GeneratePlaceTypes(place);
         }
 
         static void __cmd_genchaintemp(string[] args, EGRNetwork network) {
@@ -81,7 +81,7 @@ namespace MRK {
                 return;
             }
 
-            network.PlaceManager.GeneratePlaceChainTemplate(name);
+            Client.PlaceManager.GeneratePlaceChainTemplate(name);
         }
 
         static void __cmd_genchain(string[] args, EGRNetwork network) {
@@ -91,7 +91,7 @@ namespace MRK {
                 return;
             }
 
-            network.PlaceManager.GeneratePlaceChainFromTemplate(name);
+            Client.PlaceManager.GeneratePlaceChainFromTemplate(name);
         }
 
         static void __cmd_assignchainplaces(string[] args, EGRNetwork network) {
@@ -101,13 +101,13 @@ namespace MRK {
                 return;
             }
 
-            EGRPlaceChain chain = network.PlaceManager.GetChain(chainName);
+            EGRPlaceChain chain = Client.PlaceManager.GetChain(chainName);
             if (chain == null) {
                 WriteLine("Invalid chain");
                 return;
             }
 
-            network.PlaceManager.AssignPlacesToChain(chain);
+            Client.PlaceManager.AssignPlacesToChain(chain);
         }
 
         static void __cmd_addtiles(string[] args, EGRNetwork network) {
@@ -123,13 +123,30 @@ namespace MRK {
                 return;
             }
 
-            network.TileManager.AddTilesFromFile(path, tileset);
+            Client.TileManager.AddTilesFromFile(path, tileset);
         }
 
         static void __cmd_test(string[] args, EGRNetwork network) {
             WebClient wc = new WebClient();
             string res = wc.DownloadString(new Uri("https://api.mapbox.com/directions/v5/mapbox/driving/30.9416872837362%2C30.071121507752316%3B30.957293813885634%2C30.063245685427646?alternatives=true&geometries=geojson&steps=true&access_token=pk.eyJ1IjoiMjAwMGVneXB0IiwiYSI6ImNrbHI5dnlwZTBuNTgyb2xsOTRvdnQyN2QifQ.fOW4YjVUAE5fjwtL9Etajg"));
             WriteLine(res);
+        }
+
+        static void __cmd_genresource(string[] args, EGRNetwork network) {
+            string resourceName = TryGetElement(args, 0);
+            if (IsStringInvalid(resourceName)) {
+                WriteLine("Invalid resource name");
+                return;
+            }
+
+            string path = TryGetElement(args, 1);
+            if (IsStringInvalid(path)) {
+                WriteLine("Invalid path");
+                return;
+            }
+
+            bool res = Client.CDNNetwork.ResourceManager.CreateResource(resourceName, path);
+            WriteLine("Result=" + res);
         }
     }
 }

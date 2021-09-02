@@ -23,7 +23,7 @@ namespace MRK.Networking.Packets {
             string password = stream.ReadString();
 
             EGRAccount acc;
-            bool success = network.AccountManager.LoginAccount(email, password, sessionUser, out acc);
+            bool success = EGRMain.Instance.AccountManager.LoginAccount(email, password, sessionUser, out acc);
             if (success) {
                 sessionUser.AssignAccount(acc);
             }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace MRK {
     public class MRKParser {
@@ -34,6 +35,17 @@ namespace MRK {
             }
 
             return list;
+        }
+
+        public static Range? ParseRange(string input) {
+            if (string.IsNullOrEmpty(input))
+                return null;
+
+            //x..y
+            int sepIdx = input.IndexOf("..");
+            string begin = input.Substring(0, sepIdx);
+            string end = input.Substring(sepIdx + 2);
+            return new Range(int.Parse(begin), int.Parse(end));
         }
     }
 }

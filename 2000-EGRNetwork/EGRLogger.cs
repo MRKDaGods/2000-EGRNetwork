@@ -1,4 +1,5 @@
-﻿using static System.Console;
+﻿using System;
+using static System.Console;
 
 namespace MRK {
     public enum EGRLogType {
@@ -28,7 +29,7 @@ namespace MRK {
 
             prefix += "]";
 
-            WriteLine($"{prefix} {msg}");
+            WriteLine($"[{EGRMain.Instance.RelativeTime:hh\\:mm\\:ss\\.fff}] {prefix} {msg}");
         }
 
         public static void LogInfo(string msg) {

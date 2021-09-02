@@ -15,7 +15,7 @@ namespace MRK.Networking.Packets {
 
             //do validation, etc
 
-            bool success = network.AccountManager.RegisterAccount(name, email, password, sessionUser.HWID);
+            bool success = EGRMain.Instance.AccountManager.RegisterAccount(name, email, password, sessionUser.HWID);
             LogInfo($"[{sessionUser.Peer.Id}] registered acc, n={name}, em={email}, pwd={password}, hwid={sessionUser.HWID}, result={success}");
 
             network.SendStandardResponsePacket(sessionUser.Peer, buffer, success ? EGRStandardResponse.SUCCESS : EGRStandardResponse.FAILED);

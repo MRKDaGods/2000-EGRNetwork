@@ -2,7 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
+
+using static MRK.EGRLogger;
 
 namespace MRK {
     public class EGRAccountManager {
@@ -14,9 +15,9 @@ namespace MRK {
         string m_TokensPath => $"{m_RootPath}\\Tokens";
 
         public void Initialize(string root) {
+            LogInfo($"Initializing AccountManager, root={root}");
+
             m_RootPath = root;
-            if (!Directory.Exists(root))
-                Directory.CreateDirectory(root);
 
             m_IOAccount = new EGRFileSysIOAccount(m_AccountsPath);
             m_IOToken = new EGRFileSysIOToken(m_TokensPath);

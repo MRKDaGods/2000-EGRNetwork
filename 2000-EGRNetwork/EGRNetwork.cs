@@ -41,16 +41,14 @@ namespace MRK.Networking {
         readonly MRKWorker[] m_Workers;
         int m_LastWorkerIdx;
 
-        public static EGRNetwork Instance { get; private set; }
-        public EGRAccountManager AccountManager { get; private set; }
-        public EGRPlaceManager PlaceManager { get; private set; }
-        public EGRTileManager TileManager { get; private set; }
-        public EGRWTE WTE { get; private set; }
+        public string Name { get; private set; }
+        public int Port => m_Port;
+        public string Key => m_Key;
 
-        public EGRNetwork(string name, int port, string key, params string[] paths) {
-            Instance = this;
+        public EGRNetwork(string name, int port, string key) {
+            LogInfo($"Initializing network, name={name} port={port} key={key}");
 
-            LogInfo($"Initializing network, name={name} port={port} key={key}, paths=[{paths.StringifyArray()}]");
+            Name = name;
 
             m_Key = key;
             m_Users = new Dictionary<NetPeer, EGRSessionUser>();
@@ -80,11 +78,6 @@ namespace MRK.Networking {
                 m_PacketHandlers[type] = handlers;
             }
 
-            (AccountManager = new EGRAccountManager()).Initialize(paths[0]);
-            (PlaceManager = new EGRPlaceManager()).Initialize(paths[1], paths[0]);
-            (TileManager = new EGRTileManager()).Initialize(paths[0]);
-            WTE = new EGRWTE(paths[2]);
-
             m_ActiveDownloads = new Dictionary<NetPeer, List<EGRDownloadRequest>>();
 
             m_Workers = new MRKWorker[WORKER_COUNT];
@@ -99,7 +92,7 @@ namespace MRK.Networking {
         }
 
         void OnPeerConnected(NetPeer peer) {
-            LogInfo($"[{peer.Id}] Peer connected, ep={peer.EndPoint}");
+            LogInfo($"[{Name}] [{peer.Id}] Peer connected, ep={peer.EndPoint}");
 
             EGRSessionUser sUser = GetSessionUser(peer);
             if (sUser != null) {
@@ -124,7 +117,7 @@ namespace MRK.Networking {
 
             m_Users.Remove(sUser.Peer);
 
-            LogInfo($"[{peer.Id}] disconnected");
+            LogInfo($"[{Name}] [{peer.Id}] disconnected");
         }
 
         EGRSessionUser GetSessionUser(NetPeer peer) {
@@ -149,7 +142,7 @@ namespace MRK.Networking {
 
                     m_OnPacketReceived?.Invoke(peer, type, dataStream, bufferedReq);
 
-                    WriteLine($"[{peer.Id}] packet, n={nature}, t={type}, SZ={dataStream.Data.Length} bytes, w={wIdx}");
+                    LogInfo($"[{Name}] [{peer.Id}] packet, n={nature}, t={type}, SZ={dataStream.Data.Length} bytes, w={wIdx}");
 
                     dataStream.Clean();
                 }
@@ -249,7 +242,12 @@ namespace MRK.Networking {
             }
 
             foreach (MethodInfo handler in m_PacketHandlers[packet]) {
-                handler.Invoke(null, new object[] { this, GetSessionUser(peer), stream, buf });
+                try {
+                    handler.Invoke(null, new object[] { this, GetSessionUser(peer), stream, buf });
+                }
+                catch {
+                    LogInfo($"[{Name}] Error while handling {packet}");
+                }
             }
         }
 

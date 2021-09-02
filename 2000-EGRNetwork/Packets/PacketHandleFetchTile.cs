@@ -20,7 +20,7 @@ namespace MRK.Networking.Packets {
             int y = stream.ReadInt32();
 
             EGRTileID tileID = new EGRTileID { Z = z, X = x, Y = y };
-            bool success = network.TileManager.GetTile(tileset, tileID);
+            bool success = EGRMain.Instance.TileManager.GetTile(tileset, tileID);
             EGRDownloadRequest downloadRequest = success ? network.CreateDownloadRequest(sessionUser.Peer, tileID.Data) : null;
             network.SendPacket(sessionUser.Peer, buffer, PacketType.TILEFETCH, DeliveryMethod.ReliableOrdered, _x => {
                 _x.WriteByte((byte)(success ? EGRStandardResponse.SUCCESS : EGRStandardResponse.FAILED));

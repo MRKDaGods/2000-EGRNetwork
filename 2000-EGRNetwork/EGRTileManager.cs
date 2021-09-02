@@ -25,9 +25,9 @@ namespace MRK {
         }
 
         public void Initialize(string root) {
+            LogInfo($"Initializing TileManager, root={root}");
+
             m_RootPath = root;
-            if (!Directory.Exists(root))
-                Directory.CreateDirectory(root);
         }
 
         public bool GetTile(string tileset, EGRTileID tileID) {

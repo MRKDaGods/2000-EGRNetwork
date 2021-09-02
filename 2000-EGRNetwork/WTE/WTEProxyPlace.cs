@@ -9,5 +9,8 @@ namespace MRK.WTE {
         public string Name;
         public float GeneralMinimum;
         public float GeneralMaximum;
+        public List<string> Tags;
+        public string IconResource;
+        public byte[] IconResourceSig;
     }
 }

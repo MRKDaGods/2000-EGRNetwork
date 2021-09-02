@@ -42,9 +42,9 @@ namespace MRK {
         }
 
         public void Initialize(string path, string root) {
+            LogInfo($"Initializing PlaceManager, path={path} root={root}");
+
             m_RootPath = root;
-            if (!Directory.Exists(root))
-                Directory.CreateDirectory(root);
 
             m_IOPlace = new EGRFileSysIOPlace(m_PlacesPath);
             m_IOChain = new EGRFileSysIOPlaceChain(m_PlacesChainsPath);

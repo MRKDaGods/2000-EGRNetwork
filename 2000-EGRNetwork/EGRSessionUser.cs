@@ -14,6 +14,7 @@ namespace MRK.Networking {
         public EGRAccount Account { get; private set; }
         public EGRToken Token { get; set; }
         public HashSet<string> SentCIDs { get; private set; }
+        public EGRCDNInfo CDNInfo { get; private set; }
 
         public EGRSessionUser(NetPeer peer) {
             Peer = peer;
@@ -23,7 +24,7 @@ namespace MRK.Networking {
         public void AssignXorKey(string key) {
             XorKey = key;
 
-            EGRNetwork.Instance.SendPacket(Peer, -1, PacketType.XKEY, DeliveryMethod.ReliableOrdered, (writer) => {
+            EGRMain.Instance.MainNetwork.SendPacket(Peer, -1, PacketType.XKEY, DeliveryMethod.ReliableOrdered, (writer) => {
                 writer.WriteString(key);
             });
 
@@ -43,6 +44,13 @@ namespace MRK.Networking {
 
         public static bool IsValidUser(EGRSessionUser user) {
             return user != null && !string.IsNullOrEmpty(user.HWID) && user.Account != null;
+        }
+
+        public void AllocateCDN() {
+            if (CDNInfo != null)
+                return;
+
+            CDNInfo = EGRMain.Instance.CDNNetwork.AllocateCDN();
         }
     }
 }

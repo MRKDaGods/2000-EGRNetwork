@@ -22,7 +22,7 @@ namespace MRK.Networking.Packets {
             double maxLng = stream.ReadDouble();
             int zoomLvl = stream.ReadInt32();
 
-            List<EGRPlace> places = network.PlaceManager.GetPlaces(minLat, minLng, maxLat, maxLng, zoomLvl);
+            List<EGRPlace> places = EGRMain.Instance.PlaceManager.GetPlaces(minLat, minLng, maxLat, maxLng, zoomLvl);
             LogInfo($"[{sessionUser.Peer.Id}] fetchidplcs, ctx={ctx} min({minLat}, {minLng}), max({maxLat}, {maxLng}), z={zoomLvl}, found {places.Count} places");
 
             network.SendPacket(sessionUser.Peer, buffer, PacketType.PLCIDFETCH, DeliveryMethod.ReliableOrdered, (x) => {

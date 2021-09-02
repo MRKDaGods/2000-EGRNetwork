@@ -13,14 +13,28 @@ namespace MRK.Networking.Packets {
             int price = stream.ReadInt32();
             string cuisine = stream.ReadString();
 
-            HashSet<Place> queryRes = network.WTE.Query(people, price, cuisine);
+            EGRWTE wte = EGRMain.Instance.WTE;
+            HashSet<Place> queryRes = wte.Query(people, price, cuisine);
+            HashSet<WTEProxyPlace> proxyRes = wte.ProxifyQuery(queryRes);
+            network.SendPacket(sessionUser.Peer, buffer, PacketType.WTEQUERY, DeliveryMethod.ReliableOrdered, (stream) => OnStreamWrite(stream, proxyRes));
+        }
 
-            network.SendPacket(sessionUser.Peer, buffer, PacketType.WTEQUERY, DeliveryMethod.ReliableOrdered, (x) => {
-                x.WriteInt32(queryRes.Count);
-                foreach (Place p in queryRes) {
-                    x.WriteString(p.Name);
-                }
-            });
+        static void OnStreamWrite(PacketDataStream stream, HashSet<WTEProxyPlace> proxyRes) {
+            if (proxyRes == null) {
+                stream.WriteInt32(0);
+                return;
+            }
+
+            stream.WriteInt32(proxyRes.Count);
+            foreach (WTEProxyPlace place in proxyRes) {
+                stream.WriteString(place.Name);
+                stream.WriteList(place.Tags, (tag, _stream) => {
+                    _stream.WriteString(tag);
+                });
+
+                stream.WriteSingle(place.GeneralMinimum);
+                stream.WriteSingle(place.GeneralMaximum);
+            }
         }
     }
 }

@@ -13,6 +13,8 @@ namespace MRK.WTE {
         List<float> m_PriceMap;
 
         public EGRWTE(string dbPath) {
+            LogInfo($"Initializing WTE");
+
             m_DatabasePath = dbPath;
             Load();
         }
@@ -39,7 +41,7 @@ namespace MRK.WTE {
 
             LogInfo($"Loaded WTE database, placeCount={m_CurrentWTEContext.Places.Count}");
 
-            string rawPriceMap = EGRMain.Instance.Config["NET_WTE_PRICE_MAP"];
+            string rawPriceMap = EGRMain.Instance.Config["NET_WTE_PRICE_MAP"].String;
             LogInfo($"WTE raw price map={rawPriceMap}");
             m_PriceMap = MRKParser.ParseArray(rawPriceMap);
             LogInfo($"WTE parsed price map={m_PriceMap.StringifyList()}");
@@ -91,6 +93,54 @@ namespace MRK.WTE {
 
                 return false;
             }).ToHashSet();
+        }
+
+        public HashSet<WTEProxyPlace> ProxifyQuery(HashSet<Place> places) {
+            if (places == null || places.Count == 0)
+                return null;
+
+            HashSet<WTEProxyPlace> proxyPlaces = new();
+            foreach (Place p in places) {
+                WTEProxyPlace proxyPlace = new();
+                proxyPlace.Name = p.Name;
+                proxyPlace.IconResource = $"ico_place_{p.CID}";
+                proxyPlace.Tags = new List<string>();
+
+                Category tagCategory = p.Categories.Find(c => c.Type == CategoryType.PlaceTags);
+                if (tagCategory != null) {
+                    foreach (ICategoryChild categoryChild in tagCategory.Children) {
+                        PlaceTag pt = (PlaceTag)categoryChild;
+                        
+                        if (pt.Type == PlaceTagType.Custom) {
+                            proxyPlace.Tags.Add(pt.CustomType);
+                            continue;
+                        }
+
+                        proxyPlace.Tags.Add(pt.Type.ToString());
+                    }
+                }
+
+                Category pricingCategory = p.Categories.Find(c => c.Type == CategoryType.PlacePricing);
+                //check if place has pricing data
+                if (pricingCategory != null) {
+                    foreach (ICategoryChild categoryChild in pricingCategory.Children) {
+                        PlacePricing pp = (PlacePricing)categoryChild;
+                        switch (pp.Type) {
+                            case PlacePricingType.GeneralMinimum:
+                                proxyPlace.GeneralMinimum = pp.Value;
+                                break;
+
+                            case PlacePricingType.GeneralMaximum:
+                                proxyPlace.GeneralMaximum = pp.Value;
+                                break;
+                        }
+                    }
+                }
+
+                proxyPlaces.Add(proxyPlace);
+            }
+
+            return proxyPlaces;
         }
     }
 }

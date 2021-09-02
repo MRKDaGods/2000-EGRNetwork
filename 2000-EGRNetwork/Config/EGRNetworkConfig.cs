@@ -85,15 +85,15 @@ namespace MRK {
             File.WriteAllText(m_ConfigPath, ms_DefaultConfig);
         }
 
-        public string this[string key] {
+        public EGRNetworkConfigRecord this[string key] {
             get {
                 string val;
                 m_Config.TryGetValue(key, out val);
-                return val;
+                return new EGRNetworkConfigRecord(val);
             }
 
             set {
-                m_Config[key] = value;
+                m_Config[key] = value.String;
             }
         }
     }

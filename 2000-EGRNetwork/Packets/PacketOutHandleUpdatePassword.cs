@@ -18,7 +18,7 @@ namespace MRK.Networking.Packets {
             string pass = stream.ReadString();
             bool logoutAll = stream.ReadBool();
 
-            bool success = network.AccountManager.UpdatePassword(token, pass, logoutAll, sessionUser);
+            bool success = EGRMain.Instance.AccountManager.UpdatePassword(token, pass, logoutAll, sessionUser);
             LogInfo($"[{sessionUser.Peer.Id}] update acc pwd, pwd={pass}, hwid={sessionUser.HWID}, result={success}");
 
             network.SendStandardResponsePacket(sessionUser.Peer, buffer, success ? EGRStandardResponse.SUCCESS : EGRStandardResponse.FAILED);
