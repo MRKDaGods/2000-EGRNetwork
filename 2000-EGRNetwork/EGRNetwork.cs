@@ -40,12 +40,14 @@ namespace MRK.Networking {
         readonly Dictionary<NetPeer, List<EGRDownloadRequest>> m_ActiveDownloads;
         readonly MRKWorker[] m_Workers;
         int m_LastWorkerIdx;
+        bool m_EnableTilePiping;
 
         public string Name { get; private set; }
         public int Port => m_Port;
         public string Key => m_Key;
+        public Dictionary<NetPeer, EGRSessionUser>.ValueCollection Users => m_Users.Values;
 
-        public EGRNetwork(string name, int port, string key) {
+        public EGRNetwork(string name, int port, string key, bool enableTilePiping = false) {
             LogInfo($"Initializing network, name={name} port={port} key={key}");
 
             Name = name;
@@ -53,6 +55,8 @@ namespace MRK.Networking {
             m_Key = key;
             m_Users = new Dictionary<NetPeer, EGRSessionUser>();
             m_OnPacketReceived = INTERNAL_OnPacketReceived;
+
+            m_EnableTilePiping = enableTilePiping;
 
             m_Listener = new EventBasedNetListener();
             m_Listener.PeerConnectedEvent += OnPeerConnected;
@@ -100,7 +104,7 @@ namespace MRK.Networking {
                 return;
             }
 
-            sUser = new EGRSessionUser(peer);
+            sUser = new EGRSessionUser(peer, this, m_EnableTilePiping);
             //assign xor key
             string xorKey = EGRUtils.GetRandomString(24);
             sUser.AssignXorKey(xorKey);

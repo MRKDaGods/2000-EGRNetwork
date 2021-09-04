@@ -15,6 +15,14 @@ namespace MRK {
             return $"{Z}/{X}/{Y}";
         }
 
+        public override int GetHashCode() {
+            int hash = X.GetHashCode();
+            hash = (hash * 397) ^ Y.GetHashCode();
+            hash = (hash * 397) ^ Z.GetHashCode();
+
+            return hash;
+        }
+
         public void Write(PacketDataStream stream) {
             stream.WriteInt32(Z);
             stream.WriteInt32(X);
@@ -104,7 +112,7 @@ namespace MRK {
                     //encode
                     m_LocalThreadPool.QueueTask(() => {
                         MemoryStream stream = MRKImageEncoder.EncodeImageWithQuality(info.Data, 256, 256);
-                        byte[] data = stream.GetBuffer();
+                        byte[] data = stream != null ? stream.GetBuffer() : info.Data;
                         callback(new EGRTile {
                             ID = tileID,
                             Data = data,
@@ -113,7 +121,10 @@ namespace MRK {
 
                         TileIO.AddTile(tileset, tileID, lowRes, data);
                         TileIO.AddTile(tileset, tileID, false, info.Data); //the higher quality one
-                        stream.Dispose();
+
+                        if (stream != null) {
+                            stream.Dispose();
+                        }
                     });
                 }
                 else {

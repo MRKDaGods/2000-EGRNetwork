@@ -4,9 +4,14 @@ namespace MRK.Networking.Packets {
     [PacketHandler(PacketType.TILEFETCH)]
     public class PacketHandleFetchTile : EGRBase {
         static void Handle(EGRNetwork network, EGRSessionUser sessionUser, PacketDataStream stream, int buffer) {
-            //if (!EGRSessionUser.IsValidUser(sessionUser)) {
-            //
-            //}
+            if (!EGRSessionUser.IsValidUser(sessionUser, false)) {
+                return;
+            }
+
+            if (sessionUser.TilePipe == null) {
+                LogInfo("TILEPIPE NULL");
+                return;
+            }
 
             string tileset = stream.ReadString();
             int z = stream.ReadInt32();
@@ -19,7 +24,17 @@ namespace MRK.Networking.Packets {
                 X = x,
                 Y = y
             };
-            Client.TileManager.GetTile(tileset, tileID, low, (tile) => {
+
+            sessionUser.TilePipe.QueueTile(new EGRUserTileRequest {
+                Tileset = tileset,
+                TileID = tileID,
+                Hash = tileID.GetHashCode(),
+                Buffer = buffer,
+                Low = low,
+                Cancelled = false
+            });
+
+            /* Client.TileManager.GetTile(tileset, tileID, low, (tile) => {
                 network.SendPacket(sessionUser.Peer, buffer, PacketType.TILEFETCH, DeliveryMethod.ReliableUnordered, (stream) => {
                     bool success = tile != null;
                     stream.WriteBool(success);
@@ -30,7 +45,7 @@ namespace MRK.Networking.Packets {
                         stream.WriteBytes(tile.Data); //data
                     }
                 });
-            });
+            }); */
         }
     }
 }

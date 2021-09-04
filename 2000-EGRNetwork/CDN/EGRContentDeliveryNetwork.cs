@@ -22,7 +22,7 @@ namespace MRK.Networking {
             m_CDNs = new List<CDN>(cdnCount);
             for (int i = 0; i < cdnCount; i++) {
                 CDN cdn = new CDN {
-                    Network = new EGRNetwork($"CDN{i}", cdnBasePort + i, cdnKey)
+                    Network = new EGRNetwork($"CDN{i}", cdnBasePort + i, cdnKey, true)
                 };
 
                 m_CDNs.Add(cdn);
