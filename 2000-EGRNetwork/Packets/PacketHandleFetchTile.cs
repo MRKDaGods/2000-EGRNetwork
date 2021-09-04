@@ -2,35 +2,35 @@
 
 namespace MRK.Networking.Packets {
     [PacketHandler(PacketType.TILEFETCH)]
-    public class PacketHandleFetchTile {
+    public class PacketHandleFetchTile : EGRBase {
         static void Handle(EGRNetwork network, EGRSessionUser sessionUser, PacketDataStream stream, int buffer) {
-            if (string.IsNullOrEmpty(sessionUser.HWID)) {
-                LogError($"[{sessionUser.Peer.Id}] does not have a valid hwid, hwid={sessionUser.HWID}");
-                return;
-            }
-
-            //if (sessionUser.Account == null) {
-            //    LogError($"[{sessionUser.Peer.Id}] is not logged in, hwid={sessionUser.HWID}");
-            //    return;
+            //if (!EGRSessionUser.IsValidUser(sessionUser)) {
+            //
             //}
 
             string tileset = stream.ReadString();
             int z = stream.ReadInt32();
             int x = stream.ReadInt32();
             int y = stream.ReadInt32();
+            bool low = stream.ReadBool();
 
-            EGRTileID tileID = new EGRTileID { Z = z, X = x, Y = y };
-            bool success = EGRMain.Instance.TileManager.GetTile(tileset, tileID);
-            EGRDownloadRequest downloadRequest = success ? network.CreateDownloadRequest(sessionUser.Peer, tileID.Data) : null;
-            network.SendPacket(sessionUser.Peer, buffer, PacketType.TILEFETCH, DeliveryMethod.ReliableOrdered, _x => {
-                _x.WriteByte((byte)(success ? EGRStandardResponse.SUCCESS : EGRStandardResponse.FAILED));
-                if (success) {
-                    _x.WriteUInt64(downloadRequest.ID);
-                }
+            EGRTileID tileID = new() {
+                Z = z,
+                X = x,
+                Y = y
+            };
+            Client.TileManager.GetTile(tileset, tileID, low, (tile) => {
+                network.SendPacket(sessionUser.Peer, buffer, PacketType.TILEFETCH, DeliveryMethod.ReliableUnordered, (stream) => {
+                    bool success = tile != null;
+                    stream.WriteBool(success);
+                    stream.Write<EGRTileID>(tileID);
+
+                    if (success) {
+                        stream.WriteInt32(tile.Data.Length); //dataSz
+                        stream.WriteBytes(tile.Data); //data
+                    }
+                });
             });
-
-            if (downloadRequest != null)
-                network.StartDownload(downloadRequest);
         }
     }
 }

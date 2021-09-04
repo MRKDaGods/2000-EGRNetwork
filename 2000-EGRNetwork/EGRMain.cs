@@ -25,6 +25,7 @@ namespace MRK {
         public EGRNetwork MainNetwork => m_Network;
         public EGRContentDeliveryNetwork CDNNetwork => m_CDNNetwork;
         public MRKIOScheduler IOScheduler { get; private set; }
+        public MRKDownloadManager DownloadManager { get; private set; }
 
         public static void Main(string[] _) {
             if (Instance == null)
@@ -65,8 +66,10 @@ namespace MRK {
             WorkingDirectory = m_Config["NET_WORKING_DIR"].String;
             (AccountManager = new EGRAccountManager()).Initialize(WorkingDirectory);
             (PlaceManager = new EGRPlaceManager()).Initialize(m_Config["NET_PLACES_SRC_DIR"].String, WorkingDirectory);
-            (TileManager = new EGRTileManager()).Initialize(WorkingDirectory);
+            TileManager = new EGRTileManager(WorkingDirectory);//.Initialize(WorkingDirectory);
             WTE = new EGRWTE(m_Config["NET_WTE_DB_PATH"].String);
+
+            DownloadManager = new MRKDownloadManager();
 
             int threadInterval = m_Config["NET_THREAD_INTERVAL"].Int;
             LogInfo($"Network thread interval={threadInterval}ms");

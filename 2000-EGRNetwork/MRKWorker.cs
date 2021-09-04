@@ -23,11 +23,12 @@ namespace MRK {
 
         void WorkerLoop() {
             while (m_RunLock.Running) {
-                lock (m_QueuedActions) {
-                    if (m_QueuedActions.Count > 0) {
-                        Action action = m_QueuedActions.Dequeue();
-                        action();
+                if (m_QueuedActions.Count > 0) {
+                    Action action;
+                    lock (m_QueuedActions) {
+                        action = m_QueuedActions.Dequeue();
                     }
+                    action();
                 }
 
                 Thread.Sleep(500);

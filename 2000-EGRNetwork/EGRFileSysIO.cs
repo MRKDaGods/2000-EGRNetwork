@@ -127,28 +127,4 @@ namespace MRK {
             return Directory.Exists($"{m_Root}\\{sub}");
         }
     }
-
-    public class EGRFileSysIOTileID : EGRFileSysIO<EGRTileID> {
-        public EGRFileSysIOTileID(string root) : base(root) {
-        }
-
-        protected override string GetDataFile(EGRTileID obj) {
-            return $"{obj.Z}\\{obj.X}\\{obj.Y}\\tile.png";
-        }
-
-        protected override EGRTileID Read(BinaryReader r) {
-            byte[] data = new byte[r.BaseStream.Length];
-            for (long i = 0; i < r.BaseStream.Length; i++)
-                data[i] = r.ReadByte();
-
-            return new EGRTileID {
-                Data = data
-            };
-        }
-
-        protected override void Write(EGRTileID obj, BinaryWriter w) {
-            foreach (byte b in obj.Data)
-                w.Write(b);
-        }
-    }
 }

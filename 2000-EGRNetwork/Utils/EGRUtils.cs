@@ -8,7 +8,7 @@ namespace MRK.Networking {
         static string ms_Charset = "abcdefghijklmnopqrstuvwxyzABDCEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 
         public static string GetRandomString(int len) {
-            Random random = new Random();
+            Random random = new();
             string str = "";
 
             for (int i = 0; i < len; i++)

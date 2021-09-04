@@ -123,13 +123,13 @@ namespace MRK {
                 return;
             }
 
-            Client.TileManager.AddTilesFromFile(path, tileset);
+            //Client.TileManager.AddTilesFromFile(path, tileset);
         }
 
         static void __cmd_test(string[] args, EGRNetwork network) {
-            WebClient wc = new WebClient();
-            string res = wc.DownloadString(new Uri("https://api.mapbox.com/directions/v5/mapbox/driving/30.9416872837362%2C30.071121507752316%3B30.957293813885634%2C30.063245685427646?alternatives=true&geometries=geojson&steps=true&access_token=pk.eyJ1IjoiMjAwMGVneXB0IiwiYSI6ImNrbHI5dnlwZTBuNTgyb2xsOTRvdnQyN2QifQ.fOW4YjVUAE5fjwtL9Etajg"));
-            WriteLine(res);
+            //WebClient wc = new WebClient();
+            //string res = wc.DownloadString(new Uri("https://api.mapbox.com/directions/v5/mapbox/driving/30.9416872837362%2C30.071121507752316%3B30.957293813885634%2C30.063245685427646?alternatives=true&geometries=geojson&steps=true&access_token=pk.eyJ1IjoiMjAwMGVneXB0IiwiYSI6ImNrbHI5dnlwZTBuNTgyb2xsOTRvdnQyN2QifQ.fOW4YjVUAE5fjwtL9Etajg"));
+            //WriteLine(res);
         }
 
         static void __cmd_genresource(string[] args, EGRNetwork network) {
@@ -147,6 +147,42 @@ namespace MRK {
 
             bool res = Client.CDNNetwork.ResourceManager.CreateResource(resourceName, path);
             WriteLine("Result=" + res);
+        }
+
+        static void __cmd_gettile(string[] args, EGRNetwork network) {
+            string tileset = TryGetElement(args, 0);
+            if (IsStringInvalid(tileset)) {
+                WriteLine("Invalid tileset");
+                return;
+            }
+
+            string[] subArgs = new string[4];
+            for (int i = 0; i < subArgs.Length; i++) {
+                string arg = TryGetElement(args, i + 1);
+                if (IsStringInvalid(arg)) {
+                    WriteLine($"Invalid subArg {i}");
+                    return;
+                }
+
+                subArgs[i] = arg;
+            }
+
+            Client.TileManager.GetTile(
+                tileset,
+                new EGRTileID {
+                    Z = int.Parse(subArgs[0]),
+                    X = int.Parse(subArgs[1]),
+                    Y = int.Parse(subArgs[2])
+                },
+                subArgs[3] == "1",
+                (tile) => {
+                    if (tile == null) {
+                        WriteLine($"Failed to get tile");
+                        return;
+                    }
+
+                    WriteLine($"Got tile successfully, [{tile.ID}] size={tile.Data.Length} bytes low={tile.LowResolution}");
+                });
         }
     }
 }
