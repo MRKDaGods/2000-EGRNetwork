@@ -3,7 +3,7 @@ using System.Threading;
 using static MRK.EGRLogger;
 
 namespace MRK.Networking {
-    public class EGRContentDeliveryNetwork : EGRBase {
+    public class EGRContentDeliveryNetwork : MRKBehaviour {
         public class CDN {
             public EGRNetwork Network;
             public Thread Thread;

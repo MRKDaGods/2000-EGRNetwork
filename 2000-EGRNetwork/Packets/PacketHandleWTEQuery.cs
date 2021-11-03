@@ -28,6 +28,7 @@ namespace MRK.Networking.Packets {
             stream.WriteInt32(proxyRes.Count);
             foreach (WTEProxyPlace place in proxyRes) {
                 stream.WriteString(place.Name);
+                stream.WriteUInt64(place.CID);
                 stream.WriteList(place.Tags, (tag, _stream) => {
                     _stream.WriteString(tag);
                 });

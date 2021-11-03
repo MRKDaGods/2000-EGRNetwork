@@ -1,6 +1,6 @@
 ﻿namespace MRK.Networking.Packets {
     [PacketHandler(PacketType.TILEFETCHCANCEL)]
-    public class PacketHandleCancelFetchTile : EGRBase {
+    public class PacketHandleCancelFetchTile : MRKBehaviour {
         static void Handle(EGRNetwork network, EGRSessionUser sessionUser, PacketDataStream stream, int buffer) {
             if (!EGRSessionUser.IsValidUser(sessionUser, false))
                 return;

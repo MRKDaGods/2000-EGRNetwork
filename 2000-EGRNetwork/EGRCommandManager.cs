@@ -11,7 +11,7 @@ using static System.Console;
 using static MRK.EGRLogger;
 
 namespace MRK {
-    public class EGRCommandManager : EGRBase {
+    public class EGRCommandManager : MRKBehaviour {
         public static void Execute(string cmd) {
             string[] cmdline = cmd.Trim(' ', '\t').Split(' ');
             if (cmdline.Length == 0 || cmdline[0].Length == 0)
@@ -182,7 +182,8 @@ namespace MRK {
                     }
 
                     WriteLine($"Got tile successfully, [{tile.ID}] size={tile.Data.Length} bytes low={tile.LowResolution}");
-                });
+                }
+            );
         }
     }
 }

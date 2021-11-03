@@ -1,7 +1,8 @@
-﻿using static MRK.EGRLogger;
+﻿using System.Collections.Generic;
+using static MRK.EGRLogger;
 
 namespace MRK {
-    public class EGRRemoteTileProviderTokenAuthenticated : EGRBase, IEGRRemoteTileProvider {
+    public class EGRRemoteTileProviderTokenAuthenticated : MRKBehaviour, IEGRRemoteTileProvider {
         const string ZOOM = "{ZOOM}";
         const string X = "{X}";
         const string Y = "{Y}";

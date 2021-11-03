@@ -21,22 +21,27 @@ namespace MRK.Networking.Packets {
             LogInfo($"[{sessionUser.Peer.Id}] fetchplc, {cid}");
 
             network.SendPacket(sessionUser.Peer, buffer, PacketType.PLCFETCH, DeliveryMethod.ReliableOrdered, (x) => {
-                x.WriteString(place.Name);
-                x.WriteString(place.Type);
-                x.WriteUInt64(place.CIDNum);
-                x.WriteString(place.Address);
-                x.WriteDouble(place.Latitude);
-                x.WriteDouble(place.Longitude);
+                bool exists = place != null;
+                x.WriteBool(exists);
 
-                x.WriteInt32(place.Ex.Length);
-                foreach (string ex in place.Ex)
-                    x.WriteString(ex);
+                if (exists) {
+                    x.WriteString(place.Name);
+                    x.WriteString(place.Type);
+                    x.WriteUInt64(place.CIDNum);
+                    x.WriteString(place.Address);
+                    x.WriteDouble(place.Latitude);
+                    x.WriteDouble(place.Longitude);
 
-                x.WriteUInt64(place.Chain);
+                    x.WriteInt32(place.Ex.Length);
+                    foreach (string ex in place.Ex)
+                        x.WriteString(ex);
 
-                x.WriteInt32(place.Types.Length);
-                foreach (EGRPlaceType type in place.Types)
-                    x.WriteUInt16((ushort)type);
+                    x.WriteUInt64(place.Chain);
+
+                    x.WriteInt32(place.Types.Length);
+                    foreach (EGRPlaceType type in place.Types)
+                        x.WriteUInt16((ushort)type);
+                }
             });
         }
     }

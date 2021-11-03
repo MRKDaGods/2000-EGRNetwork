@@ -1,7 +1,11 @@
-﻿using System.Net;
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace MRK {
-    public class MRKDownloadManager : EGRBase {
+    public class MRKDownloadManager : MRKBehaviour {
         public class DownloadInfo {
             public string Request;
             public byte[] Data;

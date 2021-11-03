@@ -2,7 +2,7 @@
 
 namespace MRK.Networking.Packets {
     [PacketHandler(PacketType.TILEFETCH)]
-    public class PacketHandleFetchTile : EGRBase {
+    public class PacketHandleFetchTile : MRKBehaviour {
         static void Handle(EGRNetwork network, EGRSessionUser sessionUser, PacketDataStream stream, int buffer) {
             if (!EGRSessionUser.IsValidUser(sessionUser, false)) {
                 return;

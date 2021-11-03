@@ -7,7 +7,7 @@ using System.IO;
 using static MRK.EGRLogger;
 
 namespace MRK {
-    public class EGRCDNResourceManager : EGRBase {
+    public class EGRCDNResourceManager : MRKBehaviour {
         const string RESOURCE_NAME = "res";
         const string LOCK_NAME = "lock";
 

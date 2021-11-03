@@ -1,5 +1,7 @@
 ﻿using MRK.Networking;
 using MRK.Networking.Packets;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace MRK {
     public class EGRUserTileRequest {
@@ -11,7 +13,7 @@ namespace MRK {
         public bool Cancelled;
     }
 
-    public class EGRUserTilePipe : EGRBase {
+    public class EGRUserTilePipe : MRKBehaviour {
         readonly EGRSessionUser m_SessionUser;
         readonly List<EGRUserTileRequest> m_TileRequests;
         bool m_IsRunning;

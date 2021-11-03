@@ -1,4 +1,6 @@
 ﻿using MRK.Networking.Packets;
+using System;
+using System.IO;
 using static MRK.EGRLogger;
 
 namespace MRK {
@@ -36,7 +38,7 @@ namespace MRK {
         }
     }
 
-    public class EGRTileManager : EGRBase {
+    public class EGRTileManager : MRKBehaviour {
         const int TILEPOOL_INTERVAL = 500;
 
         readonly string m_RootPath;

@@ -2,7 +2,7 @@
 
 namespace MRK.Networking.Packets {
     [PacketHandler(PacketType.CDNRESOURCE)]
-    public class PacketHandleRequestCDNResource : EGRBase {
+    public class PacketHandleRequestCDNResource : MRKBehaviour {
         static void Handle(EGRNetwork network, EGRSessionUser sessionUser, PacketDataStream stream, int buffer) {
             //if (!EGRSessionUser.IsValidUser(sessionUser)) {
             //    return;

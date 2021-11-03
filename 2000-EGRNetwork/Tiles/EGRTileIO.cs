@@ -1,4 +1,6 @@
-﻿namespace MRK {
+﻿using System.IO;
+
+namespace MRK {
     public class EGRTileIO {
         readonly string m_RootPath;
 

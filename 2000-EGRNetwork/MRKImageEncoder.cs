@@ -1,5 +1,6 @@
 ﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
+using System.IO;
 
 namespace MRK {
     public class MRKImageEncoder {

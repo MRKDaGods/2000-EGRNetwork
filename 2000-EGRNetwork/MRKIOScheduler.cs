@@ -8,7 +8,7 @@ namespace MRK {
         Low, High
     }
 
-    public class MRKIOScheduler : EGRBase {
+    public class MRKIOScheduler : MRKBehaviour {
         struct FileInfo {
             public string Path { get; set; }
             public bool IsDirectory { get; set; }

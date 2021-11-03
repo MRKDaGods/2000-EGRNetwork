@@ -215,7 +215,9 @@ namespace MRK.WTE {
     public enum PlaceTagType {
         None,
         FastFood,
-        Custom
+        Custom,
+        Burger,
+        Chicken
     }
 
     public class PlaceTag : ICategoryChild {

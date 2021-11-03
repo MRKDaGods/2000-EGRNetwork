@@ -103,6 +103,7 @@ namespace MRK.WTE {
             foreach (Place p in places) {
                 WTEProxyPlace proxyPlace = new();
                 proxyPlace.Name = p.Name;
+                proxyPlace.CID = p.CID;
                 proxyPlace.IconResource = $"ico_place_{p.CID}";
                 proxyPlace.Tags = new List<string>();
 
