@@ -6,8 +6,32 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Packets\Account\PacketHandleLoginAccount.cs" />
+    <Compile Remove="Packets\Account\PacketHandleLoginAccountDev.cs" />
+    <Compile Remove="Packets\Account\PacketHandleLoginAccountToken.cs" />
+    <Compile Remove="Packets\Account\PacketHandleLogoutAccount.cs" />
+    <Compile Remove="Packets\Account\PacketHandleRegisterAccount.cs" />
+    <Compile Remove="Packets\PacketHandleCancelFetchTile.cs" />
+    <Compile Remove="Packets\PacketHandleDeviceInfo.cs" />
+    <Compile Remove="Packets\PacketHandleFetchPlaces.cs" />
+    <Compile Remove="Packets\PacketHandleFetchPlacesIDs.cs" />
+    <Compile Remove="Packets\PacketHandleFetchPlacesV2.cs" />
+    <Compile Remove="Packets\PacketHandleFetchTile.cs" />
+    <Compile Remove="Packets\PacketHandleGeoAutoComplete.cs" />
+    <Compile Remove="Packets\PacketHandleQueryDirections.cs" />
+    <Compile Remove="Packets\PacketHandlerAttribute.cs" />
+    <Compile Remove="Packets\PacketHandleRequestCDNResource.cs" />
+    <Compile Remove="Packets\PacketHandleRetrieveNetInfo.cs" />
+    <Compile Remove="Packets\PacketHandleUpdateAccountInfo.cs" />
+    <Compile Remove="Packets\PacketHandleWTEQuery.cs" />
+    <Compile Remove="Packets\PacketOutHandleUpdatePassword.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.3" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Packets\Account\" />
   </ItemGroup>
 </Project>

@@ -13,13 +13,13 @@ namespace MRK {
         public bool Cancelled;
     }
 
-    public class EGRUserTilePipe : MRKBehaviour {
-        readonly EGRSessionUser m_SessionUser;
+    public class EGRUserTilePipe : Behaviour {
+        readonly NetworkUser m_SessionUser;
         readonly List<EGRUserTileRequest> m_TileRequests;
         bool m_IsRunning;
         readonly List<EGRUserTileRequest> m_ActiveRequests;
 
-        public EGRUserTilePipe(EGRSessionUser sessionUser) {
+        public EGRUserTilePipe(NetworkUser sessionUser) {
             m_SessionUser = sessionUser;
             m_TileRequests = new List<EGRUserTileRequest>();
             m_ActiveRequests = new List<EGRUserTileRequest>();
@@ -40,7 +40,7 @@ namespace MRK {
                 m_ActiveRequests.Add(request);
             }
 
-            Client.TileManager.GetTile(request.Tileset, request.TileID, request.Low, (tile) => {
+            EGR.TileManager.GetTile(request.Tileset, request.TileID, request.Low, (tile) => {
                 lock (m_ActiveRequests) {
                     m_ActiveRequests.Remove(request);
                 }
@@ -48,7 +48,7 @@ namespace MRK {
                 if (request.Cancelled)
                     return;
 
-                m_SessionUser.Network.SendPacket(m_SessionUser.Peer, request.Buffer, PacketType.TILEFETCH, DeliveryMethod.ReliableUnordered, (stream) => {
+                /*m_SessionUser.Network.SendPacket(m_SessionUser.Peer, request.Buffer, PacketType.TILEFETCH, DeliveryMethod.ReliableUnordered, (stream) => {
                     bool success = tile != null;
                     stream.WriteBool(success);
                     stream.Write<EGRTileID>(request.TileID);
@@ -57,7 +57,7 @@ namespace MRK {
                         stream.WriteInt32(tile.Data.Length); //dataSz
                         stream.WriteBytes(tile.Data); //data
                     }
-                });
+                }); */
             });
         }
 

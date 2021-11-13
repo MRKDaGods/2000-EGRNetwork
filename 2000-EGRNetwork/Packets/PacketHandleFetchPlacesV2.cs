@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using static MRK.EGRLogger;
+using static MRK.Logger;
 
 namespace MRK.Networking.Packets {
     [PacketHandler(PacketType.PLCFETCHV2)]
@@ -18,7 +18,7 @@ namespace MRK.Networking.Packets {
             return EGRUtils.CalculateRawHash(bytes);
         }
 
-        static void Handle(EGRNetwork network, EGRSessionUser sessionUser, PacketDataStream stream, int buffer) {
+        static void Handle(Network network, NetworkUser sessionUser, PacketDataStream stream, int buffer) {
             if (string.IsNullOrEmpty(sessionUser.HWID)) {
                 LogError($"[{sessionUser.Peer.Id}] does not have a valid hwid, hwid={sessionUser.HWID}");
                 return;
@@ -37,7 +37,7 @@ namespace MRK.Networking.Packets {
             double maxLng = stream.ReadDouble();
             int zoomLvl = stream.ReadInt32();
 
-            List<EGRPlace> places = EGRMain.Instance.PlaceManager.GetPlaces(minLat, minLng, maxLat, maxLng, zoomLvl, sessionUser.SentCIDs);
+            List<EGRPlace> places = EGR.Instance.PlaceManager.GetPlaces(minLat, minLng, maxLat, maxLng, zoomLvl, sessionUser.SentCIDs);
             string realTileHash = Hash(places);
             if (realTileHash == tileHash) {
                 LogInfo($"Client has matching hash {tileHash}");

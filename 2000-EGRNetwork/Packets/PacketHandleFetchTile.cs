@@ -1,10 +1,10 @@
-﻿using static MRK.EGRLogger;
+﻿using static MRK.Logger;
 
 namespace MRK.Networking.Packets {
     [PacketHandler(PacketType.TILEFETCH)]
-    public class PacketHandleFetchTile : MRKBehaviour {
-        static void Handle(EGRNetwork network, EGRSessionUser sessionUser, PacketDataStream stream, int buffer) {
-            if (!EGRSessionUser.IsValidUser(sessionUser, false)) {
+    public class PacketHandleFetchTile : Behaviour {
+        static void Handle(Network network, NetworkUser sessionUser, PacketDataStream stream, int buffer) {
+            if (!NetworkUser.IsValidUser(sessionUser, false)) {
                 return;
             }
 

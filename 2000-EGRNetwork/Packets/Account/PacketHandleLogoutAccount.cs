@@ -1,9 +1,9 @@
-﻿using static MRK.EGRLogger;
+﻿using static MRK.Logger;
 
 namespace MRK.Networking.Packets {
     [PacketHandler(PacketType.LGNOUT)]
     public class PacketHandleLogoutAccount {
-        static void Handle(EGRNetwork network, EGRSessionUser sessionUser, PacketDataStream stream, int buffer) {
+        static void Handle(Network network, NetworkUser sessionUser, PacketDataStream stream, int buffer) {
             if (string.IsNullOrEmpty(sessionUser.HWID)) {
                 LogError($"[{sessionUser.Peer.Id}] does not have a valid hwid, hwid={sessionUser.HWID}");
                 return;

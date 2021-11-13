@@ -8,10 +8,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 using static System.Console;
-using static MRK.EGRLogger;
+using static MRK.Logger;
 
 namespace MRK {
-    public class EGRCommandManager : MRKBehaviour {
+    public class EGRCommandManager : Behaviour {
         public static void Execute(string cmd) {
             string[] cmdline = cmd.Trim(' ', '\t').Split(' ');
             if (cmdline.Length == 0 || cmdline[0].Length == 0)
@@ -25,7 +25,7 @@ namespace MRK {
 
             string[] args = new string[cmdline.Length - 1];
             Array.Copy(cmdline, 1, args, 0, args.Length);
-            mInfo.Invoke(null, new object[2] { args, EGRMain.Instance.MainNetwork });
+            mInfo.Invoke(null, new object[2] { args, null });
         }
 
         static T TryGetElement<T>(T[] array, int idx) {
@@ -36,14 +36,15 @@ namespace MRK {
             return string.IsNullOrEmpty(s) || string.IsNullOrWhiteSpace(s);
         }
 
-        static void __cmd_exit(string[] args, EGRNetwork network) {
+        static void __cmd_exit(string[] args, Network network) {
             LogInfo("Exiting...");
 
-            network.Stop();
-            Client.IsRunning = false;
+            if (network != null)
+                network.Stop();
+            EGR.IsRunning = false;
         }
 
-        static void __cmd_genidx(string[] args, EGRNetwork network) {
+        static void __cmd_genidx(string[] args, Network network) {
             string prop = TryGetElement(args, 0);
             if (IsStringInvalid(prop)) {
                 WriteLine("Invalid prop");
@@ -54,11 +55,11 @@ namespace MRK {
             switch (prop) {
 
                 case "types":
-                    Client.PlaceManager.CreateTypeIndexFolders();
+                    EGR.PlaceManager.CreateTypeIndexFolders();
                     break;
 
                 case "places":
-                    Client.PlaceManager.CreateIndexFolders();
+                    EGR.PlaceManager.CreateIndexFolders();
                     break;
 
                 default:
@@ -68,49 +69,49 @@ namespace MRK {
             }
         }
 
-        static void __cmd_idxtypes(string[] args, EGRNetwork network) {
-            List<EGRPlace> places = Client.PlaceManager.GetAllPlaces();
+        static void __cmd_idxtypes(string[] args, Network network) {
+            List<EGRPlace> places = EGR.PlaceManager.GetAllPlaces();
             foreach (EGRPlace place in places)
-                Client.PlaceManager.GeneratePlaceTypes(place);
+                EGR.PlaceManager.GeneratePlaceTypes(place);
         }
 
-        static void __cmd_genchaintemp(string[] args, EGRNetwork network) {
+        static void __cmd_genchaintemp(string[] args, Network network) {
             string name = TryGetElement(args, 0);
             if (IsStringInvalid(name)) {
                 WriteLine("Invalid name");
                 return;
             }
 
-            Client.PlaceManager.GeneratePlaceChainTemplate(name);
+            EGR.PlaceManager.GeneratePlaceChainTemplate(name);
         }
 
-        static void __cmd_genchain(string[] args, EGRNetwork network) {
+        static void __cmd_genchain(string[] args, Network network) {
             string name = TryGetElement(args, 0);
             if (IsStringInvalid(name)) {
                 WriteLine("Invalid name");
                 return;
             }
 
-            Client.PlaceManager.GeneratePlaceChainFromTemplate(name);
+            EGR.PlaceManager.GeneratePlaceChainFromTemplate(name);
         }
 
-        static void __cmd_assignchainplaces(string[] args, EGRNetwork network) {
+        static void __cmd_assignchainplaces(string[] args, Network network) {
             string chainName = TryGetElement(args, 0);
             if (IsStringInvalid(chainName)) {
                 WriteLine("Invalid chain name");
                 return;
             }
 
-            EGRPlaceChain chain = Client.PlaceManager.GetChain(chainName);
+            EGRPlaceChain chain = EGR.PlaceManager.GetChain(chainName);
             if (chain == null) {
                 WriteLine("Invalid chain");
                 return;
             }
 
-            Client.PlaceManager.AssignPlacesToChain(chain);
+            EGR.PlaceManager.AssignPlacesToChain(chain);
         }
 
-        static void __cmd_addtiles(string[] args, EGRNetwork network) {
+        static void __cmd_addtiles(string[] args, Network network) {
             string tileset = TryGetElement(args, 0);
             if (IsStringInvalid(tileset)) {
                 WriteLine("Invalid tileset");
@@ -126,13 +127,13 @@ namespace MRK {
             //Client.TileManager.AddTilesFromFile(path, tileset);
         }
 
-        static void __cmd_test(string[] args, EGRNetwork network) {
+        static void __cmd_test(string[] args, Network network) {
             //WebClient wc = new WebClient();
             //string res = wc.DownloadString(new Uri("https://api.mapbox.com/directions/v5/mapbox/driving/30.9416872837362%2C30.071121507752316%3B30.957293813885634%2C30.063245685427646?alternatives=true&geometries=geojson&steps=true&access_token=pk.eyJ1IjoiMjAwMGVneXB0IiwiYSI6ImNrbHI5dnlwZTBuNTgyb2xsOTRvdnQyN2QifQ.fOW4YjVUAE5fjwtL9Etajg"));
             //WriteLine(res);
         }
 
-        static void __cmd_genresource(string[] args, EGRNetwork network) {
+        static void __cmd_genresource(string[] args, Network network) {
             string resourceName = TryGetElement(args, 0);
             if (IsStringInvalid(resourceName)) {
                 WriteLine("Invalid resource name");
@@ -145,11 +146,11 @@ namespace MRK {
                 return;
             }
 
-            bool res = Client.CDNNetwork.ResourceManager.CreateResource(resourceName, path);
-            WriteLine("Result=" + res);
+            //bool res = EGR.CDNNetwork.ResourceManager.CreateResource(resourceName, path);
+            //WriteLine("Result=" + res);
         }
 
-        static void __cmd_gettile(string[] args, EGRNetwork network) {
+        static void __cmd_gettile(string[] args, Network network) {
             string tileset = TryGetElement(args, 0);
             if (IsStringInvalid(tileset)) {
                 WriteLine("Invalid tileset");
@@ -167,7 +168,7 @@ namespace MRK {
                 subArgs[i] = arg;
             }
 
-            Client.TileManager.GetTile(
+            EGR.TileManager.GetTile(
                 tileset,
                 new EGRTileID {
                     Z = int.Parse(subArgs[0]),

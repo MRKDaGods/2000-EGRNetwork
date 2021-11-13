@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
-using static MRK.EGRLogger;
+using static MRK.Logger;
 
 namespace MRK.WTE {
     public class EGRWTE {
@@ -41,7 +41,7 @@ namespace MRK.WTE {
 
             LogInfo($"Loaded WTE database, placeCount={m_CurrentWTEContext.Places.Count}");
 
-            string rawPriceMap = EGRMain.Instance.Config["NET_WTE_PRICE_MAP"].String;
+            string rawPriceMap = EGR.Config["NET_WTE_PRICE_MAP"].String;
             LogInfo($"WTE raw price map={rawPriceMap}");
             m_PriceMap = MRKParser.ParseArray(rawPriceMap);
             LogInfo($"WTE parsed price map={m_PriceMap.StringifyList()}");

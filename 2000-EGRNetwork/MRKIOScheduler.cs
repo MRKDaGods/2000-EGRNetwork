@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using static MRK.EGRLogger;
+using static MRK.Logger;
 
 namespace MRK {
     public enum MRKIOSchedulerPriority {
         Low, High
     }
 
-    public class MRKIOScheduler : MRKBehaviour {
+    public class MRKIOScheduler : Behaviour {
         struct FileInfo {
             public string Path { get; set; }
             public bool IsDirectory { get; set; }
@@ -77,10 +77,10 @@ namespace MRK {
         async Task DeletionThread() {
             LogInfo("[IO Scheduler] Deletion thread starting");
 
-            int interval = Client.Config["IO_SCHED_DELETE_INTERVAL"].Int;
+            int interval = EGR.Config["IO_SCHED_DELETE_INTERVAL"].Int;
             LogInfo($"[IO Scheduler] Deletion thread interval={interval}");
 
-            while (Client.IsRunning) {
+            while (EGR.IsRunning) {
                 if (m_DeletionQueue.Count > 0) {
                     FileInfo fileInfo = default;
 

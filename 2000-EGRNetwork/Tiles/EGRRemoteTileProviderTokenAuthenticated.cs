@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using static MRK.EGRLogger;
+using static MRK.Logger;
 
 namespace MRK {
-    public class EGRRemoteTileProviderTokenAuthenticated : MRKBehaviour, IEGRRemoteTileProvider {
+    public class EGRRemoteTileProviderTokenAuthenticated : Behaviour, IEGRRemoteTileProvider {
         const string ZOOM = "{ZOOM}";
         const string X = "{X}";
         const string Y = "{Y}";
@@ -18,12 +18,12 @@ namespace MRK {
         readonly string m_LowResolution;
 
         public EGRRemoteTileProviderTokenAuthenticated(string name, string token, bool logInfo = false) {
-            m_BaseURL = Client.Config[$"REMOTE_TILE_PROVIDER_{name}"].String;
+            m_BaseURL = EGR.Config[$"REMOTE_TILE_PROVIDER_{name}"].String;
             m_ProviderName = name;
             m_Token = token;
             m_TilesetTranslations = new Dictionary<string, string>();
 
-            string[] resTranslationStr = Client.Config[$"RESOLUTION_TRANSLATION_{name}"].String.Split('|');
+            string[] resTranslationStr = EGR.Config[$"RESOLUTION_TRANSLATION_{name}"].String.Split('|');
             m_HighResolution = resTranslationStr[0];
             m_LowResolution = resTranslationStr[1];
 
@@ -35,7 +35,7 @@ namespace MRK {
         public string GetTileRequest(string tileset, EGRTileID tileID, bool low) {
             string translatedTileset;
             if (!m_TilesetTranslations.TryGetValue(tileset, out translatedTileset)) {
-                string translation = Client.Config[$"TILESET_TRANSLATION_{m_ProviderName}_{tileset}"].String;
+                string translation = EGR.Config[$"TILESET_TRANSLATION_{m_ProviderName}_{tileset}"].String;
                 m_TilesetTranslations[tileset] = translation;
                 translatedTileset = translation;
             }

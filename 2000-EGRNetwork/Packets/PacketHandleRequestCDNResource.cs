@@ -1,9 +1,9 @@
-﻿using static MRK.EGRLogger;
+﻿using static MRK.Logger;
 
 namespace MRK.Networking.Packets {
     [PacketHandler(PacketType.CDNRESOURCE)]
-    public class PacketHandleRequestCDNResource : MRKBehaviour {
-        static void Handle(EGRNetwork network, EGRSessionUser sessionUser, PacketDataStream stream, int buffer) {
+    public class PacketHandleRequestCDNResource : Behaviour {
+        static void Handle(Network network, NetworkUser sessionUser, PacketDataStream stream, int buffer) {
             //if (!EGRSessionUser.IsValidUser(sessionUser)) {
             //    return;
             //}
@@ -12,7 +12,7 @@ namespace MRK.Networking.Packets {
             byte[] sig = stream.ReadBytes(16);
 
             EGRCDNResource resource;
-            bool success = Client.CDNNetwork.ResourceManager.QueryResource(resourceStr, sig, out resource);
+            bool success = Main.CDNNetwork.ResourceManager.QueryResource(resourceStr, sig, out resource);
 
             LogInfo($"Requesting resource '{resourceStr}' res={success}");
 

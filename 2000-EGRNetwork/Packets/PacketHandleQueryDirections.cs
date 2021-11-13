@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Net;
-using static MRK.EGRLogger;
+using static MRK.Logger;
 
 namespace MRK.Networking.Packets {
     [PacketHandler(PacketType.QUERYDIRS)]
@@ -9,7 +9,7 @@ namespace MRK.Networking.Packets {
             "driving", "walking", "cycling"
         };
 
-        static void Handle(EGRNetwork network, EGRSessionUser sessionUser, PacketDataStream stream, int buffer) {
+        static void Handle(Network network, NetworkUser sessionUser, PacketDataStream stream, int buffer) {
             double fromLat = stream.ReadDouble();
             double fromLng = stream.ReadDouble();
             double toLat = stream.ReadDouble();

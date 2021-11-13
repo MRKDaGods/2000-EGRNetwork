@@ -1,9 +1,9 @@
-﻿using static MRK.EGRLogger;
+﻿using static MRK.Logger;
 
 namespace MRK.Networking.Packets {
     [PacketHandler(PacketType.UPDACCPWD)]
     public class PacketHandleUpdatePassword{
-        static void Handle(EGRNetwork network, EGRSessionUser sessionUser, PacketDataStream stream, int buffer) {
+        static void Handle(Network network, NetworkUser sessionUser, PacketDataStream stream, int buffer) {
             if (string.IsNullOrEmpty(sessionUser.HWID)) {
                 LogError($"[{sessionUser.Peer.Id}] does not have a valid hwid, hwid={sessionUser.HWID}");
                 return;
@@ -18,7 +18,7 @@ namespace MRK.Networking.Packets {
             string pass = stream.ReadString();
             bool logoutAll = stream.ReadBool();
 
-            bool success = EGRMain.Instance.AccountManager.UpdatePassword(token, pass, logoutAll, sessionUser);
+            bool success = EGR.Instance.AccountManager.UpdatePassword(token, pass, logoutAll, sessionUser);
             LogInfo($"[{sessionUser.Peer.Id}] update acc pwd, pwd={pass}, hwid={sessionUser.HWID}, result={success}");
 
             network.SendStandardResponsePacket(sessionUser.Peer, buffer, success ? EGRStandardResponse.SUCCESS : EGRStandardResponse.FAILED);

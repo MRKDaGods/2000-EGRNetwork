@@ -1,11 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
-using static MRK.EGRLogger;
+using static MRK.Logger;
+
+public class Behaviour
+{
+}
 
 namespace MRK.Networking {
-    public class EGRContentDeliveryNetwork : MRKBehaviour {
+    public class EGRContentDeliveryNetwork : Behaviour {
         public class CDN {
-            public EGRNetwork Network;
+            public Network Network;
             public Thread Thread;
         }
 
@@ -15,14 +19,14 @@ namespace MRK.Networking {
         public EGRCDNResourceManager ResourceManager { get; private set; }
 
         public EGRContentDeliveryNetwork() {
-            EGRNetworkConfig config = Client.Config;
+            EGRNetworkConfig config = EGR.Config;
             int cdnCount = config["NET_CDN_COUNT"].Int;
             int cdnBasePort = config["NET_CDN_BASE_PORT"].Int;
             string cdnKey = config["NET_CDN_KEY"].String;
             m_CDNs = new List<CDN>(cdnCount);
             for (int i = 0; i < cdnCount; i++) {
                 CDN cdn = new CDN {
-                    Network = new EGRNetwork($"CDN{i}", cdnBasePort + i, cdnKey, true)
+                    Network = new Network($"CDN{i}", cdnBasePort + i, cdnKey)
                 };
 
                 m_CDNs.Add(cdn);
@@ -32,10 +36,10 @@ namespace MRK.Networking {
         }
 
         public void Start() {
-            ResourceManager.Initialize(Client.Config);
+            ResourceManager.Initialize(EGR.Config);
 
             //init our cdn threads
-            int cdnInterval = Client.Config["NET_CDN_THREAD_INTERVAL"].Int;
+            int cdnInterval = EGR.Config["NET_CDN_THREAD_INTERVAL"].Int;
             foreach (CDN cdn in m_CDNs) {
                 cdn.Network.Start();
                 cdn.Thread = new Thread(() => CDNThread(cdn, cdnInterval));
@@ -46,7 +50,7 @@ namespace MRK.Networking {
         void CDNThread(CDN cdn, int interval) {
             LogInfo($"Starting CDN thread, name={cdn.Network.Name} interval={interval}ms");
 
-            while (Client.IsRunning) {
+            while (EGR.IsRunning) {
                 cdn.Network.UpdateNetwork();
                 Thread.Sleep(interval);
             }

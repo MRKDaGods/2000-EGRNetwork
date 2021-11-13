@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-using static MRK.EGRLogger;
+using static MRK.Logger;
 
 namespace MRK {
     public class EGRAccountManager {
@@ -23,7 +23,7 @@ namespace MRK {
             m_IOToken = new EGRFileSysIOToken(m_TokensPath);
         }
 
-        public bool RegisterAccount(string name, string email, string phash, string hwid) {
+        /*public bool RegisterAccount(string name, string email, string phash, string hwid) {
             EGRAccount acc = new EGRAccount(name, email, phash, -1, hwid);
             if (AccountExists(acc))
                 return false;
@@ -32,7 +32,7 @@ namespace MRK {
             return true;
         }
 
-        public bool LoginAccount(string email, string phash, EGRSessionUser user, out EGRAccount acc) {
+        public bool LoginAccount(string email, string phash, NetworkUser user, out EGRAccount acc) {
             acc = null;
 
             EGRAccount tmp = new EGRAccount("x y", email, phash, -1, "");
@@ -56,7 +56,7 @@ namespace MRK {
             return true;
         }
 
-        public bool LoginAccount(string token, EGRSessionUser user, out EGRAccount acc) {
+        public bool LoginAccount(string token, NetworkUser user, out EGRAccount acc) {
             acc = null;
 
             EGRToken tk = m_IOToken.Read(user.HWID, token);
@@ -68,7 +68,7 @@ namespace MRK {
             return true;
         }
 
-        public bool LoginAccountDev(string name, string model, EGRSessionUser user, out EGRAccount acc) {
+        public bool LoginAccountDev(string name, string model, NetworkUser user, out EGRAccount acc) {
             acc = null;
 
             EGRAccount tmp = new EGRAccount($"{name} {model}", $"{user.HWID}@egr.com", EGRAccount.CalculateHash(user.HWID), -1, "");
@@ -91,7 +91,7 @@ namespace MRK {
             return true;
         }
 
-        public bool UpdatePassword(string token, string pass, bool logoutAll, EGRSessionUser sessionUser) {
+        public bool UpdatePassword(string token, string pass, bool logoutAll, NetworkUser sessionUser) {
             if (sessionUser.Token == null)
                 return false;
 
@@ -118,7 +118,7 @@ namespace MRK {
             return true;
         }
 
-        public bool UpdateAccountInfo(string token, string name, string email, sbyte gender, EGRSessionUser sessionUser) {
+        public bool UpdateAccountInfo(string token, string name, string email, sbyte gender, NetworkUser sessionUser) {
             //so sessionUser.Account should be our acc, lets compare tokens?
             if (sessionUser.Token == null)
                 return false;
@@ -179,6 +179,6 @@ namespace MRK {
 
         bool AccountExists(EGRAccount acc) {
             return m_IOAccount.Exists(acc);
-        }
+        }*/
     }
 }

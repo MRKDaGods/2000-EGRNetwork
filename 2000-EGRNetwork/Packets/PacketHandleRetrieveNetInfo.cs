@@ -1,10 +1,11 @@
-﻿using static MRK.EGRLogger;
+﻿using MRK.Networking.Internal;
+using static MRK.Logger;
 
 namespace MRK.Networking.Packets {
     [PacketHandler(PacketType.NETINFO)]
     public class PacketHandleRetrieveNetInfo {
-        static void Handle(EGRNetwork network, EGRSessionUser sessionUser, PacketDataStream stream, int buffer) {
-            if (!EGRSessionUser.IsValidUser(sessionUser)) {
+        static void Handle(Network network, NetworkUser sessionUser, PacketDataStream stream, int buffer) {
+            if (!NetworkUser.IsValidUser(sessionUser)) {
                 return;
             }
 
@@ -15,7 +16,7 @@ namespace MRK.Networking.Packets {
             LogInfo($"[{sessionUser.Account.FullName}] Sent CDN ({sessionUser.CDNInfo})");
         }
 
-        static void OnStreamWrite(PacketDataStream stream, EGRSessionUser user) {
+        static void OnStreamWrite(PacketDataStream stream, NetworkUser user) {
             if (user.CDNInfo != null) {
                 stream.WriteInt32(user.CDNInfo.Port);
                 stream.WriteString(user.CDNInfo.Key);

@@ -1,19 +1,19 @@
 ﻿using MRK.WTE;
 using System.Collections.Generic;
-using static MRK.EGRLogger;
+using static MRK.Logger;
 
 namespace MRK.Networking.Packets {
     [PacketHandler(PacketType.WTEQUERY)]
     public class PacketHandleWTEQuery {
-        static void Handle(EGRNetwork network, EGRSessionUser sessionUser, PacketDataStream stream, int buffer) {
-            if (!EGRSessionUser.IsValidUser(sessionUser))
+        static void Handle(Network network, NetworkUser sessionUser, PacketDataStream stream, int buffer) {
+            if (!NetworkUser.IsValidUser(sessionUser))
                 return;
 
             byte people = stream.ReadByte();
             int price = stream.ReadInt32();
             string cuisine = stream.ReadString();
 
-            EGRWTE wte = EGRMain.Instance.WTE;
+            EGRWTE wte = EGR.Instance.WTE;
             HashSet<Place> queryRes = wte.Query(people, price, cuisine);
             HashSet<WTEProxyPlace> proxyRes = wte.ProxifyQuery(queryRes);
             network.SendPacket(sessionUser.Peer, buffer, PacketType.WTEQUERY, DeliveryMethod.ReliableOrdered, (stream) => OnStreamWrite(stream, proxyRes));

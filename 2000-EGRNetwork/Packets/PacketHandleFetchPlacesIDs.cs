@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using static MRK.EGRLogger;
+using static MRK.Logger;
 
 namespace MRK.Networking.Packets {
     [PacketHandler(PacketType.PLCIDFETCH)]
     public class PacketHandleFetchPlacesIDs {
-        static void Handle(EGRNetwork network, EGRSessionUser sessionUser, PacketDataStream stream, int buffer) {
+        static void Handle(Network network, NetworkUser sessionUser, PacketDataStream stream, int buffer) {
             if (string.IsNullOrEmpty(sessionUser.HWID)) {
                 LogError($"[{sessionUser.Peer.Id}] does not have a valid hwid, hwid={sessionUser.HWID}");
                 return;
@@ -22,7 +22,7 @@ namespace MRK.Networking.Packets {
             double maxLng = stream.ReadDouble();
             int zoomLvl = stream.ReadInt32();
 
-            List<EGRPlace> places = EGRMain.Instance.PlaceManager.GetPlaces(minLat, minLng, maxLat, maxLng, zoomLvl);
+            List<EGRPlace> places = EGR.Instance.PlaceManager.GetPlaces(minLat, minLng, maxLat, maxLng, zoomLvl);
             LogInfo($"[{sessionUser.Peer.Id}] fetchidplcs, ctx={ctx} min({minLat}, {minLng}), max({maxLat}, {maxLng}), z={zoomLvl}, found {places.Count} places");
 
             network.SendPacket(sessionUser.Peer, buffer, PacketType.PLCIDFETCH, DeliveryMethod.ReliableOrdered, (x) => {

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using static MRK.EGRLogger;
+using static MRK.Logger;
 
 namespace MRK {
     public class EGRPlaceManager {

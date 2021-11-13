@@ -1,7 +1,8 @@
 ﻿using MRK.Networking.Packets;
 using System;
 using System.IO;
-using static MRK.EGRLogger;
+using MRK.Threading;
+using static MRK.Logger;
 
 namespace MRK {
     public struct EGRTileID : IMRKNetworkSerializable<EGRTileID> {
@@ -38,12 +39,12 @@ namespace MRK {
         }
     }
 
-    public class EGRTileManager : MRKBehaviour {
+    public class EGRTileManager : Behaviour {
         const int TILEPOOL_INTERVAL = 500;
 
         readonly string m_RootPath;
         IEGRRemoteTileProvider m_TileProvider;
-        readonly MRKThreadPool m_LocalThreadPool;
+        readonly ThreadPool m_LocalThreadPool;
 
         string TilesPath => $"{m_RootPath}\\Tiles";
 
@@ -55,15 +56,15 @@ namespace MRK {
 
             InitTileProvider();
 
-            m_LocalThreadPool = new MRKThreadPool(TILEPOOL_INTERVAL);
+            m_LocalThreadPool = new ThreadPool(TILEPOOL_INTERVAL, 5);
         }
 
         void InitTileProvider() {
-            string type = Client.Config[$"TILE_MANAGER_DEFAULT_PROVIDER_TYPE"].String;
+            string type = EGR.Config[$"TILE_MANAGER_DEFAULT_PROVIDER_TYPE"].String;
             switch (type) {
                 case "TOKEN_AUTHENTICATED":
-                    string name = Client.Config["TILE_MANAGER_DEFAULT_PROVIDER_NAME"].String;
-                    string token = Client.Config["TILE_MANAGER_DEFAULT_PROVIDER_TOKEN"].String;
+                    string name = EGR.Config["TILE_MANAGER_DEFAULT_PROVIDER_NAME"].String;
+                    string token = EGR.Config["TILE_MANAGER_DEFAULT_PROVIDER_TOKEN"].String;
                     m_TileProvider = new EGRRemoteTileProviderTokenAuthenticated(name, token, true);
                     break;
 
@@ -100,7 +101,7 @@ namespace MRK {
 
             string request = m_TileProvider.GetTileRequest(tileset, tileID, false);
             LogInfo($"[Tile Manager] Processing request {request}");
-            Client.DownloadManager.Download(request, (info) => {
+            /*EGR.DownloadManager.Download(request, (info) => {
                 if (info.Failure != null) {
                     LogError($"[Tile Manager] Tile download failed ID=({tileID}) {info.Failure}");
                     callback(null);
@@ -112,7 +113,7 @@ namespace MRK {
 
                 if (lowRes) {
                     //encode
-                    m_LocalThreadPool.QueueTask(() => {
+                    m_LocalThreadPool.Run(() => {
                         MemoryStream stream = MRKImageEncoder.EncodeImageWithQuality(info.Data, 256, 256);
                         byte[] data = stream != null ? stream.GetBuffer() : info.Data;
                         callback(new EGRTile {
@@ -137,7 +138,7 @@ namespace MRK {
                         LowResolution = lowRes
                     });
                 }
-            });
+            }); */
         }
     }
 }

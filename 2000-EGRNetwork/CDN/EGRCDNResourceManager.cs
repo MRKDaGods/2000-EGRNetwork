@@ -4,17 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
-using static MRK.EGRLogger;
+using static MRK.Logger;
 
 namespace MRK {
-    public class EGRCDNResourceManager : MRKBehaviour {
+    public class EGRCDNResourceManager {
         const string RESOURCE_NAME = "res";
         const string LOCK_NAME = "lock";
 
         float m_MaxResourceLockTime;
         int m_MaxResourceSize;
 
-        static string Path => $"{EGRMain.Instance.WorkingDirectory}\\CDN";
+        static string Path => $"{EGR.WorkingDirectory}\\CDN";
         
         public void Initialize(EGRNetworkConfig config) {
             LogInfo("Initializing CDN Resource Manager");
@@ -93,7 +93,7 @@ namespace MRK {
             if ((header.Lifetime != -1L && header.CreationDate + header.Lifetime < DateTime.UtcNow.Ticks)
                 || header.Size > header.TotalFileSize) {
                 //delete resource
-                Client.IOScheduler.DeleteDirectory(resourceDir, MRKIOSchedulerPriority.Low);
+                //EGR.IOScheduler.DeleteDirectory(resourceDir, MRKIOSchedulerPriority.Low);
                 return false;
             }
 

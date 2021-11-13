@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace MRK {
-    public class MRKDownloadManager : MRKBehaviour {
+    public class MRKDownloadManager : Behaviour {
         public class DownloadInfo {
             public string Request;
             public byte[] Data;
@@ -23,7 +23,7 @@ namespace MRK {
             m_Client = new HttpClient();
             m_ActiveDownloads = new HashSet<DownloadInfo>();
 
-            m_MaxDownloadCount = Client.Config["DOWNLOAD_MGR_MAX_DOWNLOADS"].Int;
+            m_MaxDownloadCount = EGR.Config["DOWNLOAD_MGR_MAX_DOWNLOADS"].Int;
             ServicePointManager.DefaultConnectionLimit = m_MaxDownloadCount;
 
             m_QueuedDownloads = new Queue<DownloadInfo>();
