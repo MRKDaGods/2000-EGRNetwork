@@ -57,30 +57,45 @@ namespace MRK.Networking
 
         private void ProcessCloudAction(IPEndPoint remoteEndPoint, NetPacketReader reader)
         {
+            Logger.PreserveStream();
+            Logger.LogInfo($"Processing cloud request from {remoteEndPoint}");
+
             CloudNetworkUser networkUser;
             if (!AuthenticateCloudConnection(remoteEndPoint, reader, out networkUser))
             {
                 Logger.LogError($"Cannot authenticate connection, endpoint={remoteEndPoint}");
-                return;
+                goto __exit;
             }
 
-            string cloudActionToken = null;
+            string rawCloudActionToken = null;
             try
             {
-                cloudActionToken = reader.GetString();
-                if (!ValidateCloudActionToken(cloudActionToken, networkUser.HWID, remoteEndPoint))
+                string cloudActionToken = reader.GetString();
+
+                if (!ValidateCloudActionToken(cloudActionToken, networkUser.HWID, remoteEndPoint, out rawCloudActionToken))
                 {
                     Logger.LogError($"Could not validate action token, t={cloudActionToken}");
-                    return;
+                    goto __exit;
                 }
 
+                Logger.LogInfo($"valid action token={rawCloudActionToken}");
+
                 string cloudActionPath = reader.GetString();
+                Logger.LogInfo($"cloud action path={cloudActionPath}");
+
                 CloudAction cloudAction = CloudActionFactory.GetCloudAction(cloudActionPath);
                 if (cloudAction != null)
                 {
-                    CloudActionContext cloudActionContext = new(this, networkUser, reader, cloudActionToken);
+                    Logger.LogInfo("Executing cloud action");
+                    CloudActionContext cloudActionContext = new(this, networkUser, reader, rawCloudActionToken);
+                    if (!cloudActionContext.Valid)
+                    {
+                        Logger.LogError("Invalid request data");
+                        goto __exit;
+                    }
+
                     cloudAction.Execute(cloudActionContext);
-                    return;
+                    goto __exit;
                 }
             }
             catch
@@ -88,18 +103,21 @@ namespace MRK.Networking
             }
 
             //we cant reply to a client with no CloudActionToken
-            if (cloudActionToken == null)
+            if (rawCloudActionToken == null)
             {
-                return;
+                goto __exit;
             }
 
             //failed
             CloudAction responseAction = CloudActionFactory.GetCloudAction(CloudActionFactory.GetCloudActionPath(CloudAPIVersion, "response"));
-            CloudActionContext responseActionContext = new(this, networkUser, reader, cloudActionToken)
+            CloudActionContext responseActionContext = new(this, networkUser, reader, rawCloudActionToken)
             {
                 Response = CloudResponse.Failure
             };
             responseAction.Execute(responseActionContext);
+
+        __exit:
+            Logger.FlushPreservedStream();
         }
 
         public void CloudSend(CloudActionContext context)
@@ -119,22 +137,24 @@ namespace MRK.Networking
             }
         }
 
-        private bool ValidateCloudActionToken(string token, string hwid, IPEndPoint remoteEndPoint)
+        private bool ValidateCloudActionToken(string token, string hwid, IPEndPoint remoteEndPoint, out string rawToken)
         {
+            rawToken = null;
             if (token == null || hwid == null || remoteEndPoint == null)
             {
                 return false;
             }
 
             //THIS BREAKS VPNs
-            byte[] addr = remoteEndPoint.Address.GetAddressBytes();
+            byte[] addr = System.Text.Encoding.UTF8.GetBytes(hwid); //remoteEndPoint.Address.GetAddressBytes();
             //xor addr with hwid.length
             Xor.SingleNonAlloc(addr, (char)hwid.Length);
 
             //xor with hwid[0] ^ hwid[^1]
             Xor.SingleNonAlloc(addr, (char)(hwid[0] ^ hwid[^1]));
 
-            return Xor.Multiple(token, addr).StartsWith("egr");
+            rawToken = Xor.Multiple(token, addr);
+            return rawToken.StartsWith("egr");
         }
     }
 }

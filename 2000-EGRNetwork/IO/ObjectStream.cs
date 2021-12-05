@@ -3,11 +3,11 @@
     public class ObjectStream<T>
     {
         private readonly T[] _array;
-        private uint _position;
+        private long _position;
 
-        public uint MaxIndex
+        public long MaxIndex
         {
-            get { return (uint)_array.Length - 1; }
+            get { return _array.Length - 1; }
         }
 
         public ObjectStream(T[] array)

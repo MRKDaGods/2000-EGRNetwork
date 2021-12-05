@@ -4,7 +4,7 @@ namespace MRK.Networking.CloudActions
 {
     public class CloudActionHeader : INetSerializable
     {
-        private int _responseFieldsLength;
+        private int _requestFieldsLength;
 
         public int CloudAPIVersion
         {
@@ -21,24 +21,14 @@ namespace MRK.Networking.CloudActions
             get; set;
         }
 
-        public byte TrackedEventType
-        {
-            get; set;
-        }
-
-        public string MiniActionToken
-        {
-            get; set;
-        }
-
         public int RequestFieldsLength
         {
-            get; private set;
+            set { _requestFieldsLength = value; }
         }
 
         public int ResponseFieldsLength
         {
-            set { _responseFieldsLength = value; }
+            get; private set;
         }
 
         public CloudActionHeader(int cloudAPIVersion, string actionToken)
@@ -49,21 +39,17 @@ namespace MRK.Networking.CloudActions
 
         public void Deserialize(NetDataReader reader)
         {
-            MiniActionToken = reader.GetString();
             CloudAPIVersion = reader.GetInt();
             CloudActionToken = reader.GetString();
-            RequestFieldsLength = reader.GetInt();
+            Response = (CloudResponse)reader.GetByte();
+            ResponseFieldsLength = reader.GetInt();
         }
 
         public void Serialize(NetDataWriter writer)
         {
-            writer.Put(TrackedEventType); //tracked transport
-            writer.Put(MiniActionToken); //tracked transport
-
-            writer.Put(CloudAPIVersion); //header
-            writer.Put(CloudActionToken); //header
-            writer.Put((byte)Response); //header
-            writer.Put(_responseFieldsLength); //header
+            writer.Put(CloudAPIVersion);
+            writer.Put(CloudActionToken);
+            writer.Put(_requestFieldsLength);
         }
     }
 }

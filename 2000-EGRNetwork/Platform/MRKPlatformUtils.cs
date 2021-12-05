@@ -9,6 +9,8 @@ namespace MRK {
         public static void CreateRecursiveDirectory(string dir) {
             dir = LocalizePath(dir);
 
+            if (Directory.Exists(dir)) return;
+
             int start = 0;
             while (start < dir.Length) {
                 int sepIdx = dir.IndexOf(Path.DirectorySeparatorChar, start);

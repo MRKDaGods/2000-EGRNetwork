@@ -14,7 +14,16 @@ namespace MRK.Networking.CloudAPI
 
         public override void Execute(CloudActionContext context)
         {
-            context.Response = CloudResponse.Success;
+            string liveCheck;
+            if (context.GetRequestField("X-LiveCheck", out liveCheck))
+            {
+                context.Response = liveCheck == "liveNet" ? CloudResponse.Success : CloudResponse.Failure;
+            }
+            else
+            {
+                context.Response = CloudResponse.Failure;
+            }
+
             context.Reply("live");
         }
     }

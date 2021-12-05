@@ -1,8 +1,7 @@
 {
   "profiles": {
     "2000-EGRNetwork": {
-      "commandName": "Project",
-      "commandLineArgs": "--path=\"C:\\Program Files (x86)\\Ammar\""
+      "commandName": "Project"
     }
   }
 }

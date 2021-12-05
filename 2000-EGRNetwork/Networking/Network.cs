@@ -66,6 +66,14 @@ namespace MRK.Networking
 
             _netManager = new NetManager(_eventListener);
 
+#if SIMULATE_NET_CONDITIONS
+            _netManager.SimulationPacketLossChance = 50;
+            _netManager.SimulatePacketLoss = true;
+            _netManager.SimulateLatency = true;
+            _netManager.SimulationMinLatency = 100;
+            _netManager.SimulationMaxLatency = 3000;
+#endif
+
             _threadPool = new ThreadPool(15, 10);
 
             _connectedPeers = new Dictionary<string, NetPeer>();

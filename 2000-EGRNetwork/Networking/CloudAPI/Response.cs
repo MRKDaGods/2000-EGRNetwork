@@ -14,6 +14,7 @@ namespace MRK.Networking.CloudAPI
 
         public override void Execute(CloudActionContext context)
         {
+            context.Reply();
         }
     }
 }

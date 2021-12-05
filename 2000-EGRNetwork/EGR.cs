@@ -1,4 +1,5 @@
-﻿using MRK.Networking;
+﻿using MRK.Data;
+using MRK.Networking;
 using MRK.Threading;
 using MRK.WTE;
 using System;
@@ -16,7 +17,6 @@ namespace MRK
         private static EGRContentDeliveryNetwork _cdnNetwork;
         private static ThreadPool _globalThreadPool;
         private static CommandLine _commandLine;
-        private static Thread _netThread;
 
         public static bool IsRunning
         {
@@ -83,6 +83,9 @@ namespace MRK
             LogInfo("2000-EGR Network - MODERN - MRKDaGods(Mohamed Ammar)");
             LogInfo("Starting...");
 
+            //initialize global thread pool
+            _globalThreadPool = new ThreadPool(15, 10);
+
             LogInfo("Parsing command line...");
             _commandLine = new CommandLine(args);
             LogInfo($"[DEBUG] {string.Join(" / ", args)}");
@@ -147,20 +150,9 @@ namespace MRK
                 Thread.Sleep(executionThreadInterval);
             }
 
+            Server.Stop();
+
             Exit();
-        }
-
-        static void MainNetworkThread(int interval)
-        {
-            LogInfo($"Main network thread has started");
-
-            while (IsRunning)
-            {
-                _network.UpdateNetwork();
-                Thread.Sleep(interval);
-            }
-
-            LogInfo("Main network thread is exiting...");
         }
 
         static void Exit()
