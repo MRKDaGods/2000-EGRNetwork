@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using static System.Console;
+using MRK.System;
 
 namespace MRK
 {
@@ -48,7 +49,7 @@ namespace MRK
 
             prefix += "]";
 
-            string output = $"[{EGR.RelativeTime:hh\\:mm\\:ss\\.fff}] {prefix}{new string('\t', IndentLevel)} {msg}";
+            string output = $"[{Time.Relative:hh\\:mm\\:ss\\.fff}] {prefix}{new string('\t', IndentLevel)} {msg}";
             if (_isPreserved)
             {
                 _preservedStream.AppendLine(output);

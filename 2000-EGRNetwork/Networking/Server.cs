@@ -1,4 +1,5 @@
 ﻿using MRK.Services;
+using MRK.System;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -28,7 +29,7 @@ namespace MRK.Networking
             EGR.GlobalThreadPool.Run(InitializeServices);
 
             //call CloudActionFactory static ctor
-            System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(CloudActions.CloudActionFactory).TypeHandle);
+            Initialization.RunStaticConstructor(typeof(CloudActions.CloudActionFactory));
         }
 
         private void InitializeServices()

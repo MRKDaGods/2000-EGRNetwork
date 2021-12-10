@@ -4,6 +4,8 @@ using MRK.Networking.Packets;
 using MRK.Security;
 using MRK.Threading;
 using System.Collections.Generic;
+using System.Threading;
+using ThreadPool = MRK.Threading.ThreadPool;
 
 namespace MRK.Networking
 {
@@ -29,7 +31,7 @@ namespace MRK.Networking
         private readonly string _name;
         private readonly Dictionary<string, NetPeer> _connectedPeers;
         private readonly Reference<bool> _running;
-        private System.Threading.Thread _internalNetThread;
+        private Thread _internalNetThread;
         private readonly bool _internalThread;
         private readonly int _internalThreadInterval;
 
@@ -69,7 +71,7 @@ namespace MRK.Networking
 #if SIMULATE_NET_CONDITIONS
             _netManager.SimulationPacketLossChance = 50;
             _netManager.SimulatePacketLoss = true;
-            _netManager.SimulateLatency = true;
+            //_netManager.SimulateLatency = true;
             _netManager.SimulationMinLatency = 100;
             _netManager.SimulationMaxLatency = 3000;
 #endif
@@ -207,7 +209,7 @@ namespace MRK.Networking
             while (_running.Value)
             {
                 _netManager.PollEvents();
-                System.Threading.Thread.Sleep(_internalThreadInterval);
+                Thread.Sleep(_internalThreadInterval);
             }
         }
 

@@ -102,8 +102,14 @@ namespace MRK.Data
         {
             if (_connection != null && _connection.State != ConnectionState.Closed)
             {
-                _connection.Close();
-                _connection = null;
+                try
+                {
+                    _connection.Close();
+                }
+                finally
+                {
+                    _connection = null;
+                }
             }
         }
 

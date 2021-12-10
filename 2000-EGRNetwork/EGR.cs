@@ -1,12 +1,12 @@
-﻿using MRK.Data;
-using MRK.Networking;
-using MRK.Threading;
+﻿using MRK.Networking;
 using MRK.WTE;
+using MRK.System;
 using System;
 using System.Threading;
 using static MRK.Logger;
 using static System.Console;
 using ThreadPool = MRK.Threading.ThreadPool;
+using MRK.Threading;
 
 namespace MRK
 {
@@ -58,16 +58,6 @@ namespace MRK
             get; private set;
         }
 
-        public static DateTime StartTime
-        {
-            get; private set;
-        }
-
-        public static TimeSpan RelativeTime
-        {
-            get { return DateTime.Now - StartTime; }
-        }
-
         public static ThreadPool GlobalThreadPool
         {
             get { return _globalThreadPool; }
@@ -77,7 +67,8 @@ namespace MRK
         {
             ForegroundColor = ConsoleColor.Green;
 
-            StartTime = DateTime.Now;
+            Initialization.Initialize();
+
             IsRunning = true;
 
             LogInfo("2000-EGR Network - MODERN - MRKDaGods(Mohamed Ammar)");
@@ -85,6 +76,7 @@ namespace MRK
 
             //initialize global thread pool
             _globalThreadPool = new ThreadPool(15, 10);
+            Lifetime.Initialize(_globalThreadPool); //move
 
             LogInfo("Parsing command line...");
             _commandLine = new CommandLine(args);

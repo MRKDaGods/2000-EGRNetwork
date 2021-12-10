@@ -6,7 +6,7 @@ namespace MRK.Threading
 {
     public partial class ThreadPool
     {
-        class InternalThread
+        private class InternalThread
         {
             private Thread _thread;
             private bool _running;

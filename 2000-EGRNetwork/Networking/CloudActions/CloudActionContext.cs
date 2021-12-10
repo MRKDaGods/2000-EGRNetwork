@@ -1,20 +1,26 @@
 ﻿using MRK.Networking.Internal.Utils;
+using MRK.Threading;
 using System;
 using System.Collections.Generic;
 
 namespace MRK.Networking.CloudActions
 {
-    public class CloudActionContext
+    public class CloudActionContext : InterlockedAccess
     {
+        private const int MaximumSendCount = 10;
+
         private readonly CloudNetwork _cloudNetwork;
         private readonly CloudNetworkUser _networkUser;
         private readonly NetDataWriter _responseDataWriter;
         private readonly CloudActionHeader _inHeader;
         private readonly CloudActionHeader _outHeader;
-        private readonly string _actionToken;
+        private string _actionToken;
         private bool _valid;
         private Dictionary<string, CloudRequestField> _requestFields;
         private readonly Dictionary<string, CloudResponseField> _responseFields;
+        private bool _replied;
+        private int _sendCount;
+        private int _miniTokenOffset;
 
         public CloudNetwork CloudNetwork
         {
@@ -52,23 +58,35 @@ namespace MRK.Networking.CloudActions
             get { return _valid; }
         }
 
-        public CloudActionContext(CloudNetwork cloudNetwork, CloudNetworkUser networkUser, NetDataReader data, string actionToken)
+        public bool Sendable
+        {
+            get { return _sendCount < MaximumSendCount; }
+        }
+
+        public CloudActionHeader RequestHeader
+        {
+            get { return _inHeader; }
+        }
+
+        public CloudActionContext(CloudNetwork cloudNetwork, CloudNetworkUser networkUser, NetDataReader data, string transportToken)
         {
             _cloudNetwork = cloudNetwork;
             _networkUser = networkUser;
             Data = data;
-            _actionToken = actionToken;
+            _actionToken = transportToken;
 
             _responseDataWriter = new NetDataWriter();
             _inHeader = new CloudActionHeader(CloudNetwork.CloudAPIVersion, string.Empty);
-            _outHeader = new CloudActionHeader(CloudNetwork.CloudAPIVersion, actionToken);
+            _outHeader = new CloudActionHeader(CloudNetwork.CloudAPIVersion, transportToken);
             _responseFields = new Dictionary<string, CloudResponseField>();
+            _sendCount = 0;
 
             DeserializeRequest();
         }
 
         private void WriteHeaderToStream()
         {
+            _miniTokenOffset = _responseDataWriter.Length + 1; // ... + trackedEvt
             _outHeader.TrackedEventType = 0x1; //data
             _outHeader.ResponseFieldsLength = _responseFields.Count;
             _outHeader.Serialize(_responseDataWriter);
@@ -85,6 +103,14 @@ namespace MRK.Networking.CloudActions
 
         public void Reply(string body)
         {
+            if (_replied)
+            {
+                Logger.LogError("Cannot reply more than once to the same action");
+                return;
+            }
+
+            _replied = true;
+
             WriteHeaderToStream();
             _responseDataWriter.Put(body);
             Send();
@@ -92,8 +118,23 @@ namespace MRK.Networking.CloudActions
 
         public void Reply()
         {
+            if (_replied)
+            {
+                Logger.LogError("Cannot reply more than once to the same action");
+                return;
+            }
+
+            _replied = true;
+
             WriteHeaderToStream();
             Send();
+        }
+
+        public void Fail(string reason)
+        {
+            Response = CloudResponse.Failure;
+            SetFailInfo(reason);
+            Reply();
         }
 
         private void Send()
@@ -105,6 +146,21 @@ namespace MRK.Networking.CloudActions
             }
 
             _cloudNetwork.CloudSend(this);
+            _sendCount++;
+        }
+
+        public void Retry(string miniToken)
+        {
+            //any more checks?
+            if (Sendable)
+            {
+                //re-write minitoken
+                int oldPos = _responseDataWriter.SetPosition(_miniTokenOffset);
+                _responseDataWriter.Put(miniToken);
+                _responseDataWriter.SetPosition(oldPos);
+
+                Send();
+            }
         }
 
         private void DeserializeRequest()
@@ -114,6 +170,9 @@ namespace MRK.Networking.CloudActions
                 _inHeader.Deserialize(Data);
                 Logger.LogInfo($"Fields length = {_inHeader.RequestFieldsLength}");
                 _outHeader.MiniActionToken = _inHeader.MiniActionToken;
+
+                _actionToken = _inHeader.CloudActionToken;
+                _outHeader.CloudActionToken = _actionToken;
 
                 //request fields
                 DeserializeRequestFields();

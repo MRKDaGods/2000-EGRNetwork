@@ -1,19 +1,29 @@
 ﻿using MRK.Networking.CloudActions;
 using MRK.Networking.Internal;
 using MRK.Security;
+using MRK.Threading;
+using System;
+using System.Collections.Generic;
 using System.Net;
+using System.Text;
 
 namespace MRK.Networking
 {
     public class CloudNetwork : Network
     {
         public const int CloudAPIVersion = 1;
+        private const float ContextLifetime = 50f;
+
+        private readonly Dictionary<string, Tuple<CloudActionContext, Lifetime.Frame<CloudActionContext>>> _storedContexts;
 
         public CloudNetwork(string name, int port, string key) : base(name, port, key, true, 50)
         {
+            _storedContexts = new Dictionary<string, Tuple<CloudActionContext, Lifetime.Frame<CloudActionContext>>>();
+
             //enable unconnected messages
             _netManager.UnconnectedMessagesEnabled = true;
 
+            //listen to unconnected events
             _eventListener.NetworkReceiveUnconnectedEvent += OnNetworkReceiveUnconnected;
         }
 
@@ -86,6 +96,7 @@ namespace MRK.Networking
                 CloudAction cloudAction = CloudActionFactory.GetCloudAction(cloudActionPath);
                 if (cloudAction != null)
                 {
+
                     Logger.LogInfo("Executing cloud action");
                     CloudActionContext cloudActionContext = new(this, networkUser, reader, rawCloudActionToken);
                     if (!cloudActionContext.Valid)
@@ -94,7 +105,22 @@ namespace MRK.Networking
                         goto __exit;
                     }
 
+                    //Look up stored contexts
+                    if (SendIfCached(cloudActionContext.ActionToken, cloudActionContext.RequestHeader.MiniActionToken))
+                    {
+                        Logger.LogInfo("Replied with cached response");
+                        goto __exit;
+                    }
+
                     cloudAction.Execute(cloudActionContext);
+
+                    //TODO add optional field 'do-not-store'
+                    //store context for future use
+                    _storedContexts[cloudActionContext.ActionToken] = new(
+                        cloudActionContext,
+                        Lifetime.Attach(cloudActionContext, ContextLifetime, DisposeContext)
+                    );
+
                     goto __exit;
                 }
             }
@@ -118,6 +144,37 @@ namespace MRK.Networking
 
         __exit:
             Logger.FlushPreservedStream();
+        }
+
+        private void DisposeContext(CloudActionContext context)
+        {
+            context.PreventFutureAccess();
+            _storedContexts.Remove(context.ActionToken);
+
+            Logger.LogInfo($"Disposed context {context.ActionToken}");
+        }
+
+        private bool SendIfCached(string actionToken, string miniToken)
+        {
+            if (!_storedContexts.TryGetValue(actionToken, out var context)) return false;
+
+            //acquire lock in this thread
+            return context.Item1.Interlocked(() => {
+                //we have reached max attempts
+                if (!context.Item1.Sendable)
+                {
+                    //dispose the attached frame
+                    context.Item2.Interlocked(() => context.Item2.Dispose());
+                    return false;
+                }
+                else
+                {
+                    //send the exact same response again
+                    context.Item1.Retry(miniToken);
+                }
+
+                return true;
+            });
         }
 
         public void CloudSend(CloudActionContext context)
@@ -146,7 +203,7 @@ namespace MRK.Networking
             }
 
             //THIS BREAKS VPNs
-            byte[] addr = System.Text.Encoding.UTF8.GetBytes(hwid); //remoteEndPoint.Address.GetAddressBytes();
+            byte[] addr = Encoding.UTF8.GetBytes(hwid); //remoteEndPoint.Address.GetAddressBytes();
             //xor addr with hwid.length
             Xor.SingleNonAlloc(addr, (char)hwid.Length);
 

@@ -14,7 +14,7 @@ namespace MRK
 {
     public static class EGR
     {
-        private static readonly string DummyHWID = "NB(FBF(#bf9d3nincmni3ncinc3n21";
+        private static readonly string DummyHWID = "njfnn49n9nin3n9dwokdmowmeoMCDD";
         private static readonly string CloudKey = @"?Ip)C;N8x|A~Fh<K$;R0iiq`w+8V45x\Q&CT:<%IsDq0gjeFiO>BNTLeK24b&f";
 
         private static readonly Reference<bool> _running;
@@ -54,6 +54,8 @@ namespace MRK
             //listener.NetworkReceiveUnconnectedEvent += OnNetworkReceiveUnconnected;
             _netManager = new(listener);
             _netManager.UnconnectedMessagesEnabled = true;
+            _netManager.SimulationPacketLossChance = 50;
+            //_netManager.SimulatePacketLoss = true;
             _netManager.Start();
 
             Thread netThread = new(NetThread);
@@ -73,35 +75,65 @@ namespace MRK
                             SendUnconnectedTest();
                             break;
 
+                        case "spm":
+                            {
+                                int num = int.Parse(Console.ReadLine() ?? "0");
+                                Parallel.For(0, num, (i) => {
+                                    _threadPool.Run(SendNewProtocolTest);
+                                });
+                            }
+                            break;
+
                         case "sp":
                             _threadPool.Run(SendNewProtocolTest);
                             break;
 
                         case "sl":
-                            _threadPool.Run(SendLoginTest);
+                            {
+                                Console.Write("Email: ");
+                                string email = Console.ReadLine();
+
+                                Console.Write("Pwd: ");
+                                string pwd = Console.ReadLine();
+
+                                _threadPool.Run(() => SendLoginTest(email, pwd));
+                            }
+                            break;
+
+                        case "slt":
+                            {
+                                Console.Write("Token: ");
+                                string token = Console.ReadLine();
+
+                                _threadPool.Run(() => SendLoginTest(token));
+                            }
                             break;
 
                         case "sr":
                             Console.Write("Email: ");
-                            string email = Console.ReadLine();
+                            {
+                                string email = Console.ReadLine();
 
-                            Console.Write("Pwd: ");
-                            string pwd = Console.ReadLine();
+                                Console.Write("Pwd: ");
+                                string pwd = Console.ReadLine();
 
-                            Console.Write("FirstName: ");
-                            string fName = Console.ReadLine();
+                                Console.Write("FirstName: ");
+                                string fName = Console.ReadLine();
 
-                            Console.Write("LastName: ");
-                            string lName = Console.ReadLine();
+                                Console.Write("LastName: ");
+                                string lName = Console.ReadLine();
 
-                            _threadPool.Run(() => SendRegisterTest(email, pwd, fName, lName));
+                                _threadPool.Run(() => SendRegisterTest(email, pwd, fName, lName));
+                            }
                             break;
 
                         case "sendm":
-                            int num = int.Parse(Console.ReadLine()??"0");
-                            Parallel.For(0, num, (i) => {
-                                _threadPool.Run(SendUnconnectedTest);
-                            });
+                            {
+                                int num = int.Parse(Console.ReadLine() ?? "0");
+                                Parallel.For(0, num, (i) => {
+                                    _threadPool.Run(SendUnconnectedTest);
+                                });
+                            }
                             break;
 
                         case "exit":
@@ -132,11 +164,11 @@ namespace MRK
             }
         }
 
-        private static void SendLoginTest()
+        private static void SendLoginTest(string email, string pwd)
         {
             Logger.LogInfo("[Login] Starting login test");
             CloudActionContext context = new CloudActionContext(_transport, 1);
-            Login cloudAction = new Login("", "", "", context);
+            Login cloudAction = new Login(email, EGRUtils.CalculateRawHash(Encoding.UTF8.GetBytes(pwd)), DummyHWID, context);
 
             Logger.LogInfo("[Login] Sending...");
             cloudAction.Send();
@@ -147,7 +179,25 @@ namespace MRK
                 Thread.Sleep(50);
             }
 
-            Logger.LogInfo($"[Login] Received, result={cloudAction.Response}, failInfo={cloudAction.Context.FailInfo}");
+            Logger.LogInfo($"[Login] Received, result={cloudAction.Response}, failInfo={cloudAction.Context.FailInfo}, token={cloudAction.Token}");
+        }
+
+        private static void SendLoginTest(string token)
+        {
+            Logger.LogInfo("[Login] Starting login token test");
+            CloudActionContext context = new CloudActionContext(_transport, 1);
+            Login cloudAction = new Login(token, DummyHWID, context);
+
+            Logger.LogInfo("[Login] Sending...");
+            cloudAction.Send();
+            Logger.LogInfo($"[Login] Sent tk={context.RequestHeader.CloudActionToken}");
+
+            while (cloudAction.State != CloudActionState.Received)
+            {
+                Thread.Sleep(50);
+            }
+
+            Logger.LogInfo($"[Login] Received, result={cloudAction.Response}, failInfo={cloudAction.Context.FailInfo}, uid={cloudAction.UID}");
         }
 
         private static void SendRegisterTest(string email, string pwd, string firstName, string lastName)
@@ -170,6 +220,8 @@ namespace MRK
 
         private static void SendNewProtocolTest()
         {
+            Logger.PreserveStream();
+
             Logger.LogInfo("Starting new protocol test");
             CloudActionContext context = new CloudActionContext(_transport, 1);
             Liveness cloudAction = new Liveness(context, "hi this is ex");
@@ -184,6 +236,8 @@ namespace MRK
             }
 
             Logger.LogInfo("Received");
+
+            Logger.FlushPreservedStream();
         }
 
         private static void SendUnconnectedTest()

@@ -10,7 +10,7 @@
             }
         }
 
-        public AccountServiceOperation(bool success, T result = default) : base(success, result)
+        public AccountServiceOperation(bool finished, T result = default) : base(finished, result)
         {
         }
 

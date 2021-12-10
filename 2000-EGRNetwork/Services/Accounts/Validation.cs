@@ -24,7 +24,7 @@ namespace MRK.Services.Accounts
                 @"|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$";
         }
 
-        private static bool ValidateString(string str)
+        public static bool ValidateString(string str)
         {
             return !string.IsNullOrEmpty(str) && !string.IsNullOrWhiteSpace(str);
         }

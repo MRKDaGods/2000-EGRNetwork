@@ -129,8 +129,9 @@ namespace MRK.Networking.CloudActions
                 return;
             }
 
-            _requestDataWriter.SetPosition(_miniTokenOffset);
+            int oldPos = _requestDataWriter.SetPosition(_miniTokenOffset);
             _requestDataWriter.Put(miniActionToken);
+            _requestDataWriter.SetPosition(oldPos);
             Logger.LogInfo("Written miniacttoken to serialized buffer");
         }
 
