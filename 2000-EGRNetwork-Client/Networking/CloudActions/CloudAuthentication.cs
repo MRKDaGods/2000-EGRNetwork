@@ -15,7 +15,7 @@ namespace MRK.Networking.CloudActions
             _hwid = hwid;
         }
 
-        public void AuthenticateDataStream(ref NetDataWriter data)
+        public void AuthenticateDataStream(ref NetDataWriter data, out string transportToken)
         {
             NetDataWriter secureWriter = new NetDataWriter();
             secureWriter.Put(_cloudKey);
@@ -27,6 +27,7 @@ namespace MRK.Networking.CloudActions
 
             string token = EGRUtils.GetRandomString(32);
             token = token.Insert(0, "egr");
+            transportToken = token;
 
             byte[] addr = Encoding.UTF8.GetBytes(rawHwid);
             //xor addr with hwid.length

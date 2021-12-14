@@ -23,6 +23,16 @@ namespace MRK.Threading
             return frame;
         }
 
+        public static Frame<T> Attach<T>(T obj, Predicate<T> running, Action<T> dispose) where T : class
+        {
+            if (_threadPool == null) throw new NullReferenceException("Lifetime has not been initialized properly");
+            if (obj == null || running == null || dispose == null) return null;
+
+            Frame<T> frame = new(Time.RelativeTimeSeconds, obj, running, dispose);
+            _threadPool.Run(() => InternalAttach(frame));
+            return frame;
+        }
+
         private static void InternalAttach<T>(Frame<T> frame)
         {
             do

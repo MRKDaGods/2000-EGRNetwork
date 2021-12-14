@@ -96,7 +96,7 @@ namespace MRK
                                 Console.Write("Pwd: ");
                                 string pwd = Console.ReadLine();
 
-                                _threadPool.Run(() => SendLoginTest(email, pwd));
+                                SendLoginTest(email, pwd);
                             }
                             break;
 
@@ -166,38 +166,46 @@ namespace MRK
 
         private static void SendLoginTest(string email, string pwd)
         {
-            Logger.LogInfo("[Login] Starting login test");
-            CloudActionContext context = new CloudActionContext(_transport, 1);
-            Login cloudAction = new Login(email, EGRUtils.CalculateRawHash(Encoding.UTF8.GetBytes(pwd)), DummyHWID, context);
+            Parallel.For(0, 100, (i) => {
+                Logger.PreserveStream();
+                Logger.LogInfo("[Login] Starting login test");
+                CloudActionContext context = new CloudActionContext(_transport, 1);
+                Login cloudAction = new Login(email, EGRUtils.CalculateRawHash(Encoding.UTF8.GetBytes(pwd)), DummyHWID, context);
 
-            Logger.LogInfo("[Login] Sending...");
-            cloudAction.Send();
-            Logger.LogInfo($"[Login] Sent tk={context.RequestHeader.CloudActionToken}");
+                Logger.LogInfo("[Login] Sending...");
+                cloudAction.Send();
+                Logger.LogInfo($"[Login] Sent tk={context.RequestHeader.CloudActionToken}");
 
-            while (cloudAction.State != CloudActionState.Received)
-            {
-                Thread.Sleep(50);
-            }
+                while (cloudAction.State != CloudActionState.Received)
+                {
+                    Thread.Sleep(50);
+                }
 
-            Logger.LogInfo($"[Login] Received, result={cloudAction.Response}, failInfo={cloudAction.Context.FailInfo}, token={cloudAction.Token}");
+                Logger.LogInfo($"[Login] Received, result={cloudAction.Response}, failInfo={cloudAction.Context.FailInfo}, token={cloudAction.Token}");
+                Logger.FlushPreservedStream();
+            });
         }
 
         private static void SendLoginTest(string token)
         {
-            Logger.LogInfo("[Login] Starting login token test");
-            CloudActionContext context = new CloudActionContext(_transport, 1);
-            Login cloudAction = new Login(token, DummyHWID, context);
+            Parallel.For(0, 100, (i) => {
+                Logger.PreserveStream();
+                Logger.LogInfo("[Login] Starting login token test");
+                CloudActionContext context = new CloudActionContext(_transport, 1);
+                Login cloudAction = new Login(token, DummyHWID, context);
 
-            Logger.LogInfo("[Login] Sending...");
-            cloudAction.Send();
-            Logger.LogInfo($"[Login] Sent tk={context.RequestHeader.CloudActionToken}");
+                Logger.LogInfo("[Login] Sending...");
+                cloudAction.Send();
+                Logger.LogInfo($"[Login] Sent tk={context.RequestHeader.CloudActionToken}");
 
-            while (cloudAction.State != CloudActionState.Received)
-            {
-                Thread.Sleep(50);
-            }
+                while (cloudAction.State != CloudActionState.Received)
+                {
+                    Thread.Sleep(50);
+                }
 
-            Logger.LogInfo($"[Login] Received, result={cloudAction.Response}, failInfo={cloudAction.Context.FailInfo}, uid={cloudAction.UID}");
+                Logger.LogInfo($"[Login] Received, result={cloudAction.Response}, failInfo={cloudAction.Context.FailInfo}, uid={cloudAction.UID}");
+                Logger.FlushPreservedStream();
+            });
         }
 
         private static void SendRegisterTest(string email, string pwd, string firstName, string lastName)

@@ -17,6 +17,7 @@ namespace MRK.Networking.CloudActions.Transport
         private const int MaximumRequestCount = 10;
         public const byte TrackResponseAck = 0x0;
         public const byte TrackResponseData = 0x1;
+        public const byte TrackResponseScalar = 0x2;
         public const int MiniActionTokenLength = 10;
 
         private readonly ThreadPool _threadPool;
@@ -49,7 +50,7 @@ namespace MRK.Networking.CloudActions.Transport
             try
             {
                 byte eventType = reader.GetByte();
-                if (eventType > TrackResponseData)
+                if (eventType > TrackResponseScalar)
                 {
                     //invalid !!
                     Logger.LogError($"Invalid eventtype {eventType}");
@@ -58,7 +59,11 @@ namespace MRK.Networking.CloudActions.Transport
 
                 //read
                 string miniActionToken = reader.GetString();
-                TrackingRequest? trackingRequest = _trackingRequests.Find(x => x.MiniActionToken == miniActionToken);
+                TrackingRequest? trackingRequest = _trackingRequests.Find(x => {
+                    return (eventType != TrackResponseScalar && x.MiniActionToken == miniActionToken)
+                        || x.HasTransportToken(miniActionToken);
+                });
+
                 if (trackingRequest == null)
                 {
                     Logger.LogError($"Cannot find tracker request {miniActionToken}");
@@ -121,7 +126,7 @@ namespace MRK.Networking.CloudActions.Transport
                                     //write mini action token for tracking
                                     request.Action.Context.WriteMiniActionTokenToSerializedBuffer(request.MiniActionToken);
 
-                                    SendWithMiniToken(request.Action.Context, request.MiniActionToken);
+                                    SendWithMiniToken(request.Action.Context, request.MiniActionToken, request);
                                     Logger.LogInfo($"[Transport] sent {request.Action.Context.RequestHeader.CloudActionToken} wmini={request.MiniActionToken}");
                                 });
                             }
@@ -151,12 +156,13 @@ namespace MRK.Networking.CloudActions.Transport
             _netManager.SendUnconnectedMessage(context.RequestData, _endPoint);
         }
 
-        private void SendWithMiniToken(CloudActionContext context, string? miniActionToken)
+        private void SendWithMiniToken(CloudActionContext context, string? miniActionToken, TrackingRequest request)
         {
             if (context == null || string.IsNullOrEmpty(miniActionToken)) return;
 
             NetDataWriter data = context.RequestData;
-            _cloudAuthentication.AuthenticateDataStream(ref data);
+            _cloudAuthentication.AuthenticateDataStream(ref data, out string transportToken);
+            request.AddTransportToken(transportToken);
 
             data.Put(miniActionToken);
             _netManager.SendUnconnectedMessage(data, _endPoint);

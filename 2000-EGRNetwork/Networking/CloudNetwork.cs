@@ -1,6 +1,8 @@
-﻿using MRK.Networking.CloudActions;
+﻿using MRK.Collections;
+using MRK.Networking.CloudActions;
 using MRK.Networking.Internal;
 using MRK.Security;
+using MRK.System;
 using MRK.Threading;
 using System;
 using System.Collections.Generic;
@@ -13,12 +15,17 @@ namespace MRK.Networking
     {
         public const int CloudAPIVersion = 1;
         private const float ContextLifetime = 50f;
+        private const int RequestBufferCapacity = 100;
+        private const float RequestDensityMaxDiff = 10f;
+        private const float RequestDensityMaxAllowed = 1f; //15 requests per second
 
         private readonly Dictionary<string, Tuple<CloudActionContext, Lifetime.Frame<CloudActionContext>>> _storedContexts;
+        private readonly Dictionary<InterlockedReference<IPEndPoint>, RangedCircularBuffer> _lastRequestTimes;
 
         public CloudNetwork(string name, int port, string key) : base(name, port, key, true, 50)
         {
             _storedContexts = new Dictionary<string, Tuple<CloudActionContext, Lifetime.Frame<CloudActionContext>>>();
+            _lastRequestTimes = new Dictionary<InterlockedReference<IPEndPoint>, RangedCircularBuffer>(new InterlockedReferenceComparer<IPEndPoint>());
 
             //enable unconnected messages
             _netManager.UnconnectedMessagesEnabled = true;
@@ -77,18 +84,34 @@ namespace MRK.Networking
                 goto __exit;
             }
 
-            string rawCloudActionToken = null;
+            string rawCloudTransportToken = null;
             try
             {
                 string cloudActionToken = reader.GetString();
 
-                if (!ValidateCloudActionToken(cloudActionToken, networkUser.HWID, remoteEndPoint, out rawCloudActionToken))
+                if (!ValidateCloudActionToken(cloudActionToken, networkUser.HWID, remoteEndPoint, out rawCloudTransportToken))
                 {
                     Logger.LogError($"Could not validate action token, t={cloudActionToken}");
                     goto __exit;
                 }
 
-                Logger.LogInfo($"valid action token={rawCloudActionToken}");
+                Logger.LogInfo($"valid transport token={rawCloudTransportToken}");
+
+                var interlockedEndpoint = new InterlockedReference<IPEndPoint>
+                {
+                    Value = remoteEndPoint
+                };
+
+                if (ExceedsRateLimit(interlockedEndpoint, out bool recordExists))
+                {
+                    Logger.LogError("Rate limit exceeded");
+                    goto __fail;
+                }
+                else if (!recordExists)
+                {
+                    //add new
+                    AddNewRequestTimeRecord(interlockedEndpoint);
+                }
 
                 string cloudActionPath = reader.GetString();
                 Logger.LogInfo($"cloud action path={cloudActionPath}");
@@ -96,13 +119,12 @@ namespace MRK.Networking
                 CloudAction cloudAction = CloudActionFactory.GetCloudAction(cloudActionPath);
                 if (cloudAction != null)
                 {
-
                     Logger.LogInfo("Executing cloud action");
-                    CloudActionContext cloudActionContext = new(this, networkUser, reader, rawCloudActionToken);
+                    CloudActionContext cloudActionContext = new(this, networkUser, reader, rawCloudTransportToken);
                     if (!cloudActionContext.Valid)
                     {
                         Logger.LogError("Invalid request data");
-                        goto __exit;
+                        goto __fail;
                     }
 
                     //Look up stored contexts
@@ -129,14 +151,15 @@ namespace MRK.Networking
             }
 
             //we cant reply to a client with no CloudActionToken
-            if (rawCloudActionToken == null)
+            if (rawCloudTransportToken == null)
             {
                 goto __exit;
             }
 
+        __fail:
             //failed
             CloudAction responseAction = CloudActionFactory.GetCloudAction(CloudActionFactory.GetCloudActionPath(CloudAPIVersion, "response"));
-            CloudActionContext responseActionContext = new(this, networkUser, reader, rawCloudActionToken)
+            CloudActionContext responseActionContext = new(this, networkUser, reader, rawCloudTransportToken, true)
             {
                 Response = CloudResponse.Failure
             };
@@ -212,6 +235,56 @@ namespace MRK.Networking
 
             rawToken = Xor.Multiple(token, addr);
             return rawToken.StartsWith("egr");
+        }
+
+        private bool ExceedsRequestDensity(RangedCircularBuffer buffer)
+        {
+            return buffer.Density(Time.RelativeTimeSeconds, RequestDensityMaxDiff) > RequestDensityMaxAllowed;
+        }
+
+        private bool ExceedsRateLimit(InterlockedReference<IPEndPoint> interlockedEndpoint, out bool recordExists)
+        {
+            if (_lastRequestTimes.TryGetValue(interlockedEndpoint, out RangedCircularBuffer buffer))
+            {
+                recordExists = true;
+
+                return interlockedEndpoint.Interlocked(() => {
+                    buffer.Add(Time.RelativeTimeSeconds);
+                    return ExceedsRequestDensity(buffer);
+                });
+            }
+
+            recordExists = false;
+            return false;
+        }
+
+        private bool RequestTimeTimeout(Tuple<InterlockedReference<IPEndPoint>, RangedCircularBuffer> tuple)
+        {
+            return Time.RelativeTimeSeconds - tuple.Item2.Current <= RequestDensityMaxDiff * 2;
+        }
+
+        private void AddNewRequestTimeRecord(InterlockedReference<IPEndPoint> interlockedEndpoint)
+        {
+            lock (_lastRequestTimes)
+            {
+                var buffer = new RangedCircularBuffer(RequestBufferCapacity);
+                _lastRequestTimes[interlockedEndpoint] = buffer;
+
+                //attach lifetime
+                Lifetime.Attach(
+                    new Tuple<InterlockedReference<IPEndPoint>, RangedCircularBuffer>(interlockedEndpoint, buffer),
+                    RequestTimeTimeout,
+                    DisposeRequestTime
+                );
+            }
+        }
+
+        private void DisposeRequestTime(Tuple<InterlockedReference<IPEndPoint>, RangedCircularBuffer> tuple)
+        {
+            lock (_lastRequestTimes)
+            {
+                _lastRequestTimes.Remove(tuple.Item1);
+            }
         }
     }
 }

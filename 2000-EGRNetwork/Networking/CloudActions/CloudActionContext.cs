@@ -68,7 +68,7 @@ namespace MRK.Networking.CloudActions
             get { return _inHeader; }
         }
 
-        public CloudActionContext(CloudNetwork cloudNetwork, CloudNetworkUser networkUser, NetDataReader data, string transportToken)
+        public CloudActionContext(CloudNetwork cloudNetwork, CloudNetworkUser networkUser, NetDataReader data, string transportToken, bool outOnly = false)
         {
             _cloudNetwork = cloudNetwork;
             _networkUser = networkUser;
@@ -81,13 +81,20 @@ namespace MRK.Networking.CloudActions
             _responseFields = new Dictionary<string, CloudResponseField>();
             _sendCount = 0;
 
-            DeserializeRequest();
+            if (!outOnly)
+            {
+                DeserializeRequest();
+            }
+            else
+            {
+                _valid = true;
+            }
         }
 
-        private void WriteHeaderToStream()
+        private void WriteHeaderToStream(byte evtType = 0x1)
         {
             _miniTokenOffset = _responseDataWriter.Length + 1; // ... + trackedEvt
-            _outHeader.TrackedEventType = 0x1; //data
+            _outHeader.TrackedEventType = evtType; //data=0x1
             _outHeader.ResponseFieldsLength = _responseFields.Count;
             _outHeader.Serialize(_responseDataWriter);
 
@@ -127,6 +134,24 @@ namespace MRK.Networking.CloudActions
             _replied = true;
 
             WriteHeaderToStream();
+            Send();
+        }
+
+        /// <summary>
+        /// Reply without a minitoken
+        /// </summary>
+        public void ReplyScalar()
+        {
+            if (_replied)
+            {
+                Logger.LogError("Cannot reply more than once to the same action");
+                return;
+            }
+
+            _replied = true;
+
+            _outHeader.MiniActionToken = _actionToken; //scalar
+            WriteHeaderToStream(0x2); //scalar
             Send();
         }
 

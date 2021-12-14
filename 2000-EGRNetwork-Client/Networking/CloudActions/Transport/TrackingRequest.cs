@@ -9,6 +9,7 @@ namespace MRK.Networking.CloudActions.Transport
         private float _lastRequestTime;
         private float _requestStartTime;
         private readonly object _lock;
+        private readonly HashSet<string> _transportTokens;
 
         public CloudActionState ActionState
         {
@@ -54,6 +55,7 @@ namespace MRK.Networking.CloudActions.Transport
         public TrackingRequest(CloudAction action)
         {
             _lock = new object();
+            _transportTokens = new HashSet<string>();
             _action = action;
 
             RequestsSent = 0;
@@ -86,21 +88,34 @@ namespace MRK.Networking.CloudActions.Transport
         {
             if (ActionState == CloudActionState.Received) return;
 
-            if (eventType == TrackedTransport.TrackResponseAck)
+            switch (eventType)
             {
-                if (ActionState == CloudActionState.Sending)
-                {
-                    _action.SetState(CloudActionState.Sent);
-                }
+                case TrackedTransport.TrackResponseAck:
+                    if (ActionState == CloudActionState.Sending)
+                    {
+                        _action.SetState(CloudActionState.Sent);
+                    }
+                    break;
+
+                case TrackedTransport.TrackResponseData:
+                case TrackedTransport.TrackResponseScalar:
+                    if (ActionState == CloudActionState.Sending || ActionState == CloudActionState.Sent)
+                    {
+                        _action.Context.SetResponse(reader);
+                        _action.SetState(CloudActionState.Received);
+                    }
+                    break;
             }
-            else if (eventType == TrackedTransport.TrackResponseData)
-            {
-                if (ActionState == CloudActionState.Sending || ActionState == CloudActionState.Sent)
-                {
-                    _action.Context.SetResponse(reader);
-                    _action.SetState(CloudActionState.Received);
-                }
-            }
+        }
+
+        public void AddTransportToken(string token)
+        {
+            _transportTokens.Add(token);
+        }
+
+        public bool HasTransportToken(string token)
+        {
+            return _transportTokens.Contains(token);
         }
     }
 }

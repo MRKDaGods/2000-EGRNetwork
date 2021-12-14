@@ -8,6 +8,13 @@ namespace MRK.Services.Accounts
         private const string AccountTable = "Account";
         private const string TokenTable = "Token";
 
+        private readonly object _tokenLock;
+
+        public AccountService()
+        {
+            _tokenLock = new object();
+        }
+
         public override void Initialize()
         {
             SetupPrimaryDatabase(GetDatabasePath(PrimaryDatabaseName));
@@ -258,35 +265,38 @@ namespace MRK.Services.Accounts
 
             try
             {
-                //check whether hwid has previous token
-                using var reader = PrimaryDatabase.ExecuteReader(
-                    $"SELECT * FROM {TokenTable} " +
-                    "WHERE(" +
-                    $"UID='{EscapeValue(uid)}' " +
-                    "AND " +
-                    $"HWID='{EscapeValue(hwid)}'" +
-                    ");"
-                );
-
-                //exists, delete old one for security
-                if (reader.HasRows && reader.Read())
+                lock (_tokenLock)
                 {
-                    DeleteTokenUnsafe(uid, hwid, reader.GetString(2));
+                    //check whether hwid has previous token
+                    using var reader = PrimaryDatabase.ExecuteReader(
+                        $"SELECT * FROM {TokenTable} " +
+                        "WHERE(" +
+                        $"UID='{EscapeValue(uid)}' " +
+                        "AND " +
+                        $"HWID='{EscapeValue(hwid)}'" +
+                        ");"
+                    );
+
+                    //exists, delete old one for security
+                    if (reader.HasRows && reader.Read())
+                    {
+                        DeleteTokenUnsafe(uid, hwid, reader.GetString(2));
+                    }
+
+                    //generate token
+                    Token token = Token.Generate();
+                    PrimaryDatabase.ExecuteNonQuery(
+                        $"INSERT INTO {TokenTable} (UID, HWID, Token, CreatedAt) " +
+                        "VALUES(" +
+                        $"'{EscapeValue(uid)}', " +
+                        $"'{EscapeValue(hwid)}', " +
+                        $"'{EscapeValue(token.Content)}', " +
+                        $"'{token.Ticks}'" +
+                        ");"
+                    );
+
+                    return new AccountServiceOperation<string>(true, token.Content);
                 }
-
-                //generate token
-                Token token = Token.Generate();
-                PrimaryDatabase.ExecuteNonQuery(
-                    $"INSERT INTO {TokenTable} (UID, HWID, Token, CreatedAt) " +
-                    "VALUES(" +
-                    $"'{EscapeValue(uid)}', " +
-                    $"'{EscapeValue(hwid)}', " +
-                    $"'{EscapeValue(token.Content)}', " +
-                    $"'{token.Ticks}'" +
-                    ");"
-                );
-
-                return new AccountServiceOperation<string>(true, token.Content);
             }
             catch (Exception ex)
             {

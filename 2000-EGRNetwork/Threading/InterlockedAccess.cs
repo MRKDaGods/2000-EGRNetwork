@@ -1,5 +1,5 @@
 ﻿using System;
-using SInterlocked = System.Threading.Interlocked;
+using SysInterlocked = System.Threading.Interlocked;
 
 namespace MRK.Threading
 {
@@ -51,7 +51,7 @@ namespace MRK.Threading
 
         public void PreventFutureAccess()
         {
-            SInterlocked.Exchange(ref _accessible, 0);
+            SysInterlocked.Exchange(ref _accessible, 0);
         }
     }
 }
